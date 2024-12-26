@@ -1,0 +1,1909 @@
+Харківський університет радіоелектроніки
+Факультет комп'ютерних наук
+Кафедра програмної інженерії
+
+
+
+
+ЗВІТ
+до лабораторної роботи №2 з дисципліни
+"Аналіз та рефакторинг коду"
+на тему: " РОЗРОБКА БАЗИ ДАНИХ ДЛЯ СЕРВЕРНОЇ ЧАСТИНИ ПРОГРАМНОЇ СИСТЕМИ ТА ПРИКЛАДНОГО ПРОГРАМНОГО ІНТЕРФЕЙСУ (API)"
+
+
+
+Виконав ст. гр. ПЗПІ-22-4
+Шумейко Антон Олександрович
+
+Перевірив
+ст. викладач кафедри ПІ
+Сокорчук Ігор Петрович
+
+
+
+
+
+
+Харків 2024
+1 МЕТА
+
+Метою лабораторної роботи є розробка бази даних для серверної частини  програмної системи для клімат-контролю з особистими профілями та прикладного програмного інтерфейсу.
+
+2 ХІД РОБОТИ
+
+2.1 Будова програмної системи
+
+Програмна система для клімат-контролю з особистими профілями розроблена із застосуванням архітектурного паттерну MVC (Model-View-Controller). Серверна частина реалізована на платформі Spring із використанням технологій Hibernate для роботи з базою даних. Spring обрано через його модульність, підтримку REST API та інтеграцію з іншими сучасними технологіями. Hibernate використовується для ORM (об'єктно-реляційного відображення), що спрощує роботу з базою даних і забезпечує високу продуктивність. Рішення базується на структурованому підході, що дозволяє легко масштабувати та підтримувати систему.
+
+2.2 Створення UML-діаграми прецедентів
+
+UML-діаграма прецедентів описує основні ролі та їх взаємодію із системою. У системі виділено такі ключові ролі: адміністратор системи, користувач, системний адміністратор, менеджер бази даних та аналітик. Адміністратор системи має доступ до управління профілями, моніторингу показників та налаштування системи, включаючи підключення обладнання та сенсорів. Користувачі можуть змінювати активний профіль, переглядати поточні показники та статистичні дані. 
+Окремою частиною є опис прецедентів для управління системою. Системний адміністратор відповідає за створення резервних копій, відновлення даних і моніторинг роботи сервера. Менеджер бази даних має доступ до функцій резервування та відновлення без можливості переглядати конфіденційні дані. Аналітик працює зі знеособленими даними для статистичного аналізу, але не має доступу до конфіденційної інформації. Всі ці ролі забезпечують комплексний підхід до управління та використання системи. У результаті отримаємо діаграму прецедентів, шо наведено у додатку А.
+
+2.3 Проектування бази даних
+
+На початковому етапі проєктування бази даних була створена ER-діаграма, яка відображає зв’язки між сутностями системи. Цей підхід дозволив чітко визначити структуру таблиць, їх поля та взаємозв’язки, що значно спростило подальшу реалізацію. ER-діаграма даних наведена у додатку Б.
+Використовуючи попередньо розроблену діаграму було спроектовано та розроблено реляційну базу даних на базі MySQL, оскільки вона забезпечує високу структурованість та дозволяє легко виконувати складні запити. Основними таблицями є таблиці користувачів, профілів, показників та статистичних даних. Структура бази даних передбачає забезпечення цілісності даних та їх конфіденційності. Всі дані шифруються, що підвищує рівень захисту конфіденційної інформації. Проектування бази даних проводилося з урахуванням необхідності швидкого доступу до даних, їх резервування та відновлення у разі потреби. Схема розробленої бази даних наведено у додатку В.
+
+
+
+
+2.4 Створення REST API
+
+Для взаємодії з клієнтською частиною створено REST API. API забезпечує доступ до основного функціоналу системи, включаючи управління користувачами, профілями, перегляд показників та статистичних даних. Завдяки Java Spring MVC забезпечується зручна маршрутизація запитів, а також простота їх обробки. Всі кінцеві точки захищені, а доступ до них обмежується відповідно до ролі користувача. Наприклад, адміністратор має повний доступ, тоді як звичайний користувач може переглядати лише свої дані. Реалізація REST API спрощує інтеграцію з іншими системами та дозволяє масштабувати функціонал у майбутньому. Специфікацію API наведено у додатку Г.
+
+ВИСНОВКИ
+
+	У результаті виконання лабораторної роботи, по-перше, було розроблено UML-діаграму прецедентів та ER-діаграму даних програмної системи для клімат-контролю с особистими профілями. На основі створених діаграм було створено базу даних з використанням СУБД MySQL. Її структуру було описано за допомогою схеми бази даних. Для спрощення взаємодії із базою даних було використано сучасну ORM Spring Hibernate, що забезпечую базові функції для взаємодії із СУБД. Для забезпечення взаємодії із клієнтською частиною застосунку було розроблено API на базі архітектури REST. Наприкінці було проведено тестування написаного програмного коду. 
+Результати тестування містяться у відеозвіті: 
+	
+
+ДОДАТОК А
+UML ДІАГРАМА ПРЕЦЕДЕНТІВ
+
+ 
+Рисунок А.1 – UML діаграма прецедентів (частина 1)
+
+ 
+Рисунок А.2 – UML діаграма прецедентів (частина 2)
+
+
+
+
+
+
+
+
+
+
+
+
+ДОДАТОК Б
+ER-ДІАГРАМА ДАНИХ
+
+ 
+Рисунок Б.1 – ER-діаграма бази даних
+
+
+
+ДОДАТОК В
+ДІАГРАМА СТРУКТУРИ БАЗИ ДАНИХ
+ 
+Рисунок В.1 – Cхема бази даних
+ДОДАТОК Г
+СПЕЦИФІКАЦІЯ API
+
+1 openapi: 3.0.1
+2 info:
+3   title: OpenAPI definition
+4   version: v0
+5 servers:
+6 - url: http://localhost:8080
+7   description: Generated server url
+8 paths:
+9   "/users":
+10     get:
+11       tags:
+12       - user-controller
+13       summary: Get all users
+14       operationId: getUsers
+15       responses:
+16         '200':
+17           description: OK
+18           content:
+19             "*/*":
+20               schema:
+21                 type: array
+22                 items:
+23                   "$ref": "#/components/schemas/User"
+24         '500':
+25           description: Internal Server Error
+26           content:
+27             "*/*":
+28               schema:
+29                 type: array
+30                 items:
+31                   "$ref": "#/components/schemas/User"
+32     put:
+33       tags:
+34       - user-controller
+35       summary: Update an existing user
+36       operationId: updateUser
+37       requestBody:
+38         content:
+39           application/json:
+40             schema:
+41               "$ref": "#/components/schemas/User"
+42         required: true
+43       responses:
+44         '200':
+45           description: User updated successfully
+46           content:
+47             "*/*":
+48               schema:
+49                 "$ref": "#/components/schemas/User"
+50         '500':
+51           description: Internal Server Error
+52           content:
+53             "*/*":
+54               schema:
+55                 "$ref": "#/components/schemas/User"
+56     post:
+57       tags:
+58       - user-controller
+59       summary: Add a new user
+60       operationId: addUser
+61       requestBody:
+62         content:
+63           application/json:
+64             schema:
+65               "$ref": "#/components/schemas/User"
+66         required: true
+67       responses:
+68         '200':
+69           description: User added successfully
+70           content:
+71             "*/*":
+72               schema:
+73                 "$ref": "#/components/schemas/User"
+74         '500':
+75           description: Internal Server Error
+76           content:
+77             "*/*":
+78               schema:
+79                 "$ref": "#/components/schemas/User"
+80   "/timers":
+81     get:
+82       tags:
+83       - timer-controller
+84       summary: Get all timers
+85       operationId: getAllTimers
+86       responses:
+87         '200':
+88           description: OK
+89           content:
+90             "*/*":
+91               schema:
+92                 type: array
+93                 items:
+94                   "$ref": "#/components/schemas/Timer"
+95         '500':
+96           description: Internal Server Error
+97           content:
+98             "*/*":
+99               schema:
+100                 type: array
+101                 items:
+102                   "$ref": "#/components/schemas/Timer"
+103     put:
+104       tags:
+105       - timer-controller
+106       summary: Update an existing timer
+107       operationId: updateTimer
+108       requestBody:
+109         content:
+110           application/json:
+111             schema:
+112               "$ref": "#/components/schemas/Timer"
+113         required: true
+114       responses:
+115         '200':
+116           description: Timer updated successfully
+117           content:
+118             "*/*":
+119               schema:
+120                 "$ref": "#/components/schemas/Timer"
+121         '500':
+122           description: Internal Server Error
+123           content:
+124             "*/*":
+125               schema:
+126                 "$ref": "#/components/schemas/Timer"
+127     post:
+128       tags:
+129       - timer-controller
+130       summary: Add a new timer
+131       operationId: addTimer
+132       requestBody:
+133         content:
+134           application/json:
+135             schema:
+136               "$ref": "#/components/schemas/Timer"
+137         required: true
+138       responses:
+139         '200':
+140           description: Timer added successfully
+141           content:
+142             "*/*":
+143               schema:
+144                 "$ref": "#/components/schemas/Timer"
+145         '500':
+146           description: Internal Server Error
+147           content:
+148             "*/*":
+149               schema:
+150                 "$ref": "#/components/schemas/Timer"
+151   "/systems":
+152     get:
+153       tags:
+154       - system-controller
+155       summary: Get all systems
+156       operationId: getAllSystems
+157       responses:
+158         '200':
+159           description: OK
+160           content:
+161             "*/*":
+162               schema:
+163                 type: array
+164                 items:
+165                   "$ref": "#/components/schemas/ClimateSystem"
+166         '500':
+167           description: Internal Server Error
+168           content:
+169             "*/*":
+170               schema:
+171                 type: array
+172                 items:
+173                   "$ref": "#/components/schemas/ClimateSystem"
+174     put:
+175       tags:
+176       - system-controller
+177       summary: Update an existing system
+178       operationId: updateSystem
+179       requestBody:
+180         content:
+181           application/json:
+182             schema:
+183               "$ref": "#/components/schemas/ClimateSystem"
+184         required: true
+185       responses:
+186         '200':
+187           description: System updated successfully
+188           content:
+189             "*/*":
+190               schema:
+191                 "$ref": "#/components/schemas/ClimateSystem"
+192         '500':
+193           description: Internal Server Error
+194           content:
+195             "*/*":
+196               schema:
+197                 "$ref": "#/components/schemas/ClimateSystem"
+198     post:
+199       tags:
+200       - system-controller
+201       summary: Add a new system
+202       operationId: addSystem
+203       requestBody:
+204         content:
+205           application/json:
+206             schema:
+207               "$ref": "#/components/schemas/ClimateSystem"
+208         required: true
+209       responses:
+210         '200':
+211           description: System added successfully
+212           content:
+213             "*/*":
+214               schema:
+215                 "$ref": "#/components/schemas/ClimateSystem"
+216         '500':
+217           description: Internal Server Error
+218           content:
+219             "*/*":
+220               schema:
+221                 "$ref": "#/components/schemas/ClimateSystem"
+222   "/shedules":
+223     get:
+224       tags:
+225       - shedule-controller
+226       summary: Get all shedules
+227       operationId: getAllShedules
+228       responses:
+229         '200':
+230           description: OK
+231           content:
+232             "*/*":
+233               schema:
+234                 type: array
+235                 items:
+236                   "$ref": "#/components/schemas/Schedule"
+237         '500':
+238           description: Internal Server Error
+239           content:
+240             "*/*":
+241               schema:
+242                 type: array
+243                 items:
+244                   "$ref": "#/components/schemas/Schedule"
+245     put:
+246       tags:
+247       - shedule-controller
+248       summary: Update an existing shedule
+249       operationId: updateShedule
+250       requestBody:
+251         content:
+252           application/json:
+253             schema:
+254               "$ref": "#/components/schemas/Schedule"
+255         required: true
+256       responses:
+257         '200':
+258           description: Shedule updated successfully
+259           content:
+260             "*/*":
+261               schema:
+262                 "$ref": "#/components/schemas/Schedule"
+263         '500':
+264           description: Internal Server Error
+265           content:
+266             "*/*":
+267               schema:
+268                 "$ref": "#/components/schemas/Schedule"
+269     post:
+270       tags:
+271       - shedule-controller
+272       summary: Add a new shedule
+273       operationId: addShedule
+274       requestBody:
+275         content:
+276           application/json:
+277             schema:
+278               "$ref": "#/components/schemas/Schedule"
+279         required: true
+280       responses:
+281         '200':
+282           description: Shedule added successfully
+283           content:
+284             "*/*":
+285               schema:
+286                 "$ref": "#/components/schemas/Schedule"
+287         '500':
+288           description: Internal Server Error
+289           content:
+290             "*/*":
+291               schema:
+292                 "$ref": "#/components/schemas/Schedule"
+293   "/sensors":
+294     get:
+295       tags:
+296       - sensor-controller
+297       summary: Get all sensors
+298       operationId: getAllSensors
+299       responses:
+300         '200':
+301           description: OK
+302           content:
+303             "*/*":
+304               schema:
+305                 type: array
+306                 items:
+307                   "$ref": "#/components/schemas/Sensor"
+308         '500':
+309           description: Internal Server Error
+310           content:
+311             "*/*":
+312               schema:
+313                 type: array
+314                 items:
+315                   "$ref": "#/components/schemas/Sensor"
+316     put:
+317       tags:
+318       - sensor-controller
+319       summary: Update an existing sensor
+320       operationId: updateSensor
+321       requestBody:
+322         content:
+323           application/json:
+324             schema:
+325               "$ref": "#/components/schemas/Sensor"
+326         required: true
+327       responses:
+328         '200':
+329           description: Sensor updated successfully
+330           content:
+331             "*/*":
+332               schema:
+333                 "$ref": "#/components/schemas/Sensor"
+334         '500':
+335           description: Internal Server Error
+336           content:
+337             "*/*":
+338               schema:
+339                 "$ref": "#/components/schemas/Sensor"
+340     post:
+341       tags:
+342       - sensor-controller
+343       summary: Add a new sensor
+344       operationId: addSensor
+345       requestBody:
+346         content:
+347           application/json:
+348             schema:
+349               "$ref": "#/components/schemas/Sensor"
+350         required: true
+351       responses:
+352         '200':
+353           description: Sensor added successfully
+354           content:
+355             "*/*":
+356               schema:
+357                 "$ref": "#/components/schemas/Sensor"
+358         '500':
+359           description: Internal Server Error
+360           content:
+361             "*/*":
+362               schema:
+363                 "$ref": "#/components/schemas/Sensor"
+364   "/profiles":
+365     get:
+366       tags:
+367       - profile-controller
+368       summary: Get all profiles
+369       operationId: getAllProfiles
+370       responses:
+371         '200':
+372           description: OK
+373           content:
+374             "*/*":
+375               schema:
+376                 type: array
+377                 items:
+378                   "$ref": "#/components/schemas/Profile"
+379         '500':
+380           description: Internal Server Error
+381           content:
+382             "*/*":
+383               schema:
+384                 type: array
+385                 items:
+386                   "$ref": "#/components/schemas/Profile"
+387     put:
+388       tags:
+389       - profile-controller
+390       summary: Update an existing profile
+391       operationId: updateProfile
+392       requestBody:
+393         content:
+394           application/json:
+395             schema:
+396               "$ref": "#/components/schemas/Profile"
+397         required: true
+398       responses:
+399         '200':
+400           description: Profile updated successfully
+401           content:
+402             "*/*":
+403               schema:
+404                 "$ref": "#/components/schemas/Profile"
+405         '500':
+406           description: Internal Server Error
+407           content:
+408             "*/*":
+409               schema:
+410                 "$ref": "#/components/schemas/Profile"
+411     post:
+412       tags:
+413       - profile-controller
+414       summary: Add a new profile
+415       operationId: addProfile
+416       requestBody:
+417         content:
+418           application/json:
+419             schema:
+420               "$ref": "#/components/schemas/Profile"
+421         required: true
+422       responses:
+423         '200':
+424           description: Profile added successfully
+425           content:
+426             "*/*":
+427               schema:
+428                 "$ref": "#/components/schemas/Profile"
+429         '500':
+430           description: Internal Server Error
+431           content:
+432             "*/*":
+433               schema:
+434                 "$ref": "#/components/schemas/Profile"
+435   "/messages":
+436     get:
+437       tags:
+438       - message-controller
+439       summary: Get all messages
+440       operationId: getAllMessages
+441       responses:
+442         '200':
+443           description: OK
+444           content:
+445             "*/*":
+446               schema:
+447                 type: array
+448                 items:
+449                   "$ref": "#/components/schemas/Message"
+450         '500':
+451           description: Internal Server Error
+452           content:
+453             "*/*":
+454               schema:
+455                 type: array
+456                 items:
+457                   "$ref": "#/components/schemas/Message"
+458     put:
+459       tags:
+460       - message-controller
+461       summary: Update an existing message
+462       operationId: updateMessage
+463       requestBody:
+464         content:
+465           application/json:
+466             schema:
+467               "$ref": "#/components/schemas/Message"
+468         required: true
+469       responses:
+470         '200':
+471           description: Message updated successfully
+472           content:
+473             "*/*":
+474               schema:
+475                 "$ref": "#/components/schemas/Message"
+476         '500':
+477           description: Internal Server Error
+478           content:
+479             "*/*":
+480               schema:
+481                 "$ref": "#/components/schemas/Message"
+482     post:
+483       tags:
+484       - message-controller
+485       summary: Add a new message
+486       operationId: addMessage
+487       requestBody:
+488         content:
+489           application/json:
+490             schema:
+491               "$ref": "#/components/schemas/Message"
+492         required: true
+493       responses:
+494         '200':
+495           description: Message added successfully
+496           content:
+497             "*/*":
+498               schema:
+499                 "$ref": "#/components/schemas/Message"
+500         '500':
+501           description: Internal Server Error
+502           content:
+503             "*/*":
+504               schema:
+505                 "$ref": "#/components/schemas/Message"
+506   "/measurements":
+507     get:
+508       tags:
+509       - measurement-controller
+510       summary: Get all measurements
+511       operationId: getAllMeasurements
+512       responses:
+513         '200':
+514           description: OK
+515           content:
+516             "*/*":
+517               schema:
+518                 type: array
+519                 items:
+520                   "$ref": "#/components/schemas/Measurement"
+521         '500':
+522           description: Internal Server Error
+523           content:
+524             "*/*":
+525               schema:
+526                 type: array
+527                 items:
+528                   "$ref": "#/components/schemas/Measurement"
+529     put:
+530       tags:
+531       - measurement-controller
+532       summary: Update an existing measurement
+533       operationId: updateMeasurement
+534       requestBody:
+535         content:
+536           application/json:
+537             schema:
+538               "$ref": "#/components/schemas/Measurement"
+539         required: true
+540       responses:
+541         '200':
+542           description: Measurement updated successfully
+543           content:
+544             "*/*":
+545               schema:
+546                 "$ref": "#/components/schemas/Measurement"
+547         '500':
+548           description: Internal Server Error
+549           content:
+550             "*/*":
+551               schema:
+552                 "$ref": "#/components/schemas/Measurement"
+553     post:
+554       tags:
+555       - measurement-controller
+556       summary: Add a new measurement
+557       operationId: addMeasurement
+558       requestBody:
+559         content:
+560           application/json:
+561             schema:
+562               "$ref": "#/components/schemas/Measurement"
+563         required: true
+564       responses:
+565         '200':
+566           description: Measurement added successfully
+567           content:
+568             "*/*":
+569               schema:
+570                 "$ref": "#/components/schemas/Measurement"
+571         '500':
+572           description: Internal Server Error
+573           content:
+574             "*/*":
+575               schema:
+576                 "$ref": "#/components/schemas/Measurement"
+577   "/devices":
+578     get:
+579       tags:
+580       - device-controller
+581       summary: Get all devices
+582       operationId: getAllDevices
+583       responses:
+584         '200':
+585           description: OK
+586           content:
+587             "*/*":
+588               schema:
+589                 type: array
+590                 items:
+591                   "$ref": "#/components/schemas/Device"
+592         '500':
+593           description: Internal Server Error
+594           content:
+595             "*/*":
+596               schema:
+597                 type: array
+598                 items:
+599                   "$ref": "#/components/schemas/Device"
+600     put:
+601       tags:
+602       - device-controller
+603       summary: Update an existing device
+604       operationId: updateDevice
+605       requestBody:
+606         content:
+607           application/json:
+608             schema:
+609               "$ref": "#/components/schemas/Device"
+610         required: true
+611       responses:
+612         '200':
+613           description: Device updated successfully
+614           content:
+615             "*/*":
+616               schema:
+617                 "$ref": "#/components/schemas/Device"
+618         '500':
+619           description: Internal Server Error
+620           content:
+621             "*/*":
+622               schema:
+623                 "$ref": "#/components/schemas/Device"
+624     post:
+625       tags:
+626       - device-controller
+627       summary: Add a new device
+628       operationId: addDevice
+629       requestBody:
+630         content:
+631           application/json:
+632             schema:
+633               "$ref": "#/components/schemas/Device"
+634         required: true
+635       responses:
+636         '200':
+637           description: Device added successfully
+638           content:
+639             "*/*":
+640               schema:
+641                 "$ref": "#/components/schemas/Device"
+642         '500':
+643           description: Internal Server Error
+644           content:
+645             "*/*":
+646               schema:
+647                 "$ref": "#/components/schemas/Device"
+648   "/commands":
+649     get:
+650       tags:
+651       - command-controller
+652       summary: Get all commands
+653       operationId: getAllCommands
+654       responses:
+655         '200':
+656           description: OK
+657           content:
+658             "*/*":
+659               schema:
+660                 type: array
+661                 items:
+662                   "$ref": "#/components/schemas/Command"
+663         '500':
+664           description: Internal Server Error
+665           content:
+666             "*/*":
+667               schema:
+668                 type: array
+669                 items:
+670                   "$ref": "#/components/schemas/Command"
+671     put:
+672       tags:
+673       - command-controller
+674       summary: Update an existing command
+675       operationId: updateCommand
+676       requestBody:
+677         content:
+678           application/json:
+679             schema:
+680               "$ref": "#/components/schemas/Command"
+681         required: true
+682       responses:
+683         '200':
+684           description: Command updated successfully
+685           content:
+686             "*/*":
+687               schema:
+688                 "$ref": "#/components/schemas/Command"
+689         '500':
+690           description: Internal Server Error
+691           content:
+692             "*/*":
+693               schema:
+694                 "$ref": "#/components/schemas/Command"
+695     post:
+696       tags:
+697       - command-controller
+698       summary: Add a new command
+699       operationId: addCommand
+700       requestBody:
+701         content:
+702           application/json:
+703             schema:
+704               "$ref": "#/components/schemas/Command"
+705         required: true
+706       responses:
+707         '200':
+708           description: Command added successfully
+709           content:
+710             "*/*":
+711               schema:
+712                 "$ref": "#/components/schemas/Command"
+713         '500':
+714           description: Internal Server Error
+715           content:
+716             "*/*":
+717               schema:
+718                 "$ref": "#/components/schemas/Command"
+719   "/systems/{id}/users/{userId}":
+720     post:
+721       tags:
+722       - system-controller
+723       summary: Add a user to a system
+724       operationId: addUser_1
+725       parameters:
+726       - name: id
+727         in: path
+728         required: true
+729         schema:
+730           type: integer
+731           format: int32
+732       - name: userId
+733         in: path
+734         required: true
+735         schema:
+736           type: integer
+737           format: int32
+738       - name: role
+739         in: query
+740         required: true
+741         schema:
+742           type: string
+743       responses:
+744         '200':
+745           description: User added to system successfully
+746           content:
+747             "*/*":
+748               schema:
+749                 "$ref": "#/components/schemas/ClimateSystem"
+750         '404':
+751           description: System not found
+752           content:
+753             "*/*":
+754               schema:
+755                 "$ref": "#/components/schemas/ClimateSystem"
+756         '500':
+757           description: Internal Server Error
+758           content:
+759             "*/*":
+760               schema:
+761                 "$ref": "#/components/schemas/ClimateSystem"
+762   "/users/{id}":
+763     get:
+764       tags:
+765       - user-controller
+766       summary: Get a user by ID
+767       operationId: getUser
+768       parameters:
+769       - name: id
+770         in: path
+771         required: true
+772         schema:
+773           type: integer
+774           format: int32
+775       responses:
+776         '200':
+777           description: OK
+778           content:
+779             "*/*":
+780               schema:
+781                 "$ref": "#/components/schemas/User"
+782         '404':
+783           description: User not found
+784           content:
+785             "*/*":
+786               schema:
+787                 "$ref": "#/components/schemas/User"
+788         '500':
+789           description: Internal Server Error
+790           content:
+791             "*/*":
+792               schema:
+793                 "$ref": "#/components/schemas/User"
+794     delete:
+795       tags:
+796       - user-controller
+797       summary: Delete a user by ID
+798       operationId: deleteUser
+799       parameters:
+800       - name: id
+801         in: path
+802         required: true
+803         schema:
+804           type: integer
+805           format: int32
+806       responses:
+807         '204':
+808           description: User deleted successfully
+809         '404':
+810           description: User not found
+811         '500':
+812           description: Internal Server Error
+813   "/timers/{id}":
+814     get:
+815       tags:
+816       - timer-controller
+817       summary: Get a timer by ID
+818       operationId: getTimerById
+819       parameters:
+820       - name: id
+821         in: path
+822         required: true
+823         schema:
+824           type: integer
+825           format: int32
+826       responses:
+827         '200':
+828           description: OK
+829           content:
+830             "*/*":
+831               schema:
+832                 "$ref": "#/components/schemas/Timer"
+833         '404':
+834           description: Timer not found
+835           content:
+836             "*/*":
+837               schema:
+838                 "$ref": "#/components/schemas/Timer"
+839         '500':
+840           description: Internal Server Error
+841           content:
+842             "*/*":
+843               schema:
+844                 "$ref": "#/components/schemas/Timer"
+845     delete:
+846       tags:
+847       - timer-controller
+848       summary: Delete a timer by ID
+849       operationId: deleteTimer
+850       parameters:
+851       - name: id
+852         in: path
+853         required: true
+854         schema:
+855           type: integer
+856           format: int32
+857       responses:
+858         '204':
+859           description: Timer deleted successfully
+860         '404':
+861           description: Timer not found
+862         '500':
+863           description: Internal Server Error
+864   "/systems/{id}":
+865     get:
+866       tags:
+867       - system-controller
+868       summary: Get a system by ID
+869       operationId: getSystem
+870       parameters:
+871       - name: id
+872         in: path
+873         required: true
+874         schema:
+875           type: integer
+876           format: int32
+877       responses:
+878         '200':
+879           description: OK
+880           content:
+881             "*/*":
+882               schema:
+883                 "$ref": "#/components/schemas/ClimateSystem"
+884         '404':
+885           description: System not found
+886           content:
+887             "*/*":
+888               schema:
+889                 "$ref": "#/components/schemas/ClimateSystem"
+890         '500':
+891           description: Internal Server Error
+892           content:
+893             "*/*":
+894               schema:
+895                 "$ref": "#/components/schemas/ClimateSystem"
+896     delete:
+897       tags:
+898       - system-controller
+899       summary: Delete a system by ID
+900       operationId: deleteSystem
+901       parameters:
+902       - name: id
+903         in: path
+904         required: true
+905         schema:
+906           type: integer
+907           format: int32
+908       responses:
+909         '204':
+910           description: System deleted successfully
+911         '404':
+912           description: System not found
+913         '500':
+914           description: Internal Server Error
+915   "/systems/{id}/users":
+916     get:
+917       tags:
+918       - system-controller
+919       summary: Get users of a system
+920       operationId: getUsers_1
+921       parameters:
+922       - name: id
+923         in: path
+924         required: true
+925         schema:
+926           type: integer
+927           format: int32
+928       responses:
+929         '200':
+930           description: OK
+931           content:
+932             "*/*":
+933               schema:
+934                 type: array
+935                 items:
+936                   "$ref": "#/components/schemas/User"
+937         '404':
+938           description: System not found
+939           content:
+940             "*/*":
+941               schema:
+942                 type: array
+943                 items:
+944                   "$ref": "#/components/schemas/User"
+945         '500':
+946           description: Internal Server Error
+947           content:
+948             "*/*":
+949               schema:
+950                 type: array
+951                 items:
+952                   "$ref": "#/components/schemas/User"
+953   "/shedules/{id}":
+954     get:
+955       tags:
+956       - shedule-controller
+957       summary: Get a shedule by ID
+958       operationId: getSheduleById
+959       parameters:
+960       - name: id
+961         in: path
+962         required: true
+963         schema:
+964           type: integer
+965           format: int32
+966       responses:
+967         '200':
+968           description: OK
+969           content:
+970             "*/*":
+971               schema:
+972                 "$ref": "#/components/schemas/Schedule"
+973         '404':
+974           description: Shedule not found
+975           content:
+976             "*/*":
+977               schema:
+978                 "$ref": "#/components/schemas/Schedule"
+979         '500':
+980           description: Internal Server Error
+981           content:
+982             "*/*":
+983               schema:
+984                 "$ref": "#/components/schemas/Schedule"
+985     delete:
+986       tags:
+987       - shedule-controller
+988       summary: Delete a shedule by ID
+989       operationId: deleteShedule
+990       parameters:
+991       - name: id
+992         in: path
+993         required: true
+994         schema:
+995           type: integer
+996           format: int32
+997       responses:
+998         '204':
+999           description: Shedule deleted successfully
+1000         '404':
+1001           description: Shedule not found
+1002         '500':
+1003           description: Internal Server Error
+1004   "/shedules/profile/{profileId}":
+1005     get:
+1006       tags:
+1007       - shedule-controller
+1008       summary: Get schedules by profile ID
+1009       operationId: getSchedulesByProfileId
+1010       parameters:
+1011       - name: profileId
+1012         in: path
+1013         required: true
+1014         schema:
+1015           type: integer
+1016           format: int32
+1017       responses:
+1018         '200':
+1019           description: OK
+1020           content:
+1021             "*/*":
+1022               schema:
+1023                 type: array
+1024                 items:
+1025                   "$ref": "#/components/schemas/Schedule"
+1026         '404':
+1027           description: Schedules not found
+1028           content:
+1029             "*/*":
+1030               schema:
+1031                 type: array
+1032                 items:
+1033                   "$ref": "#/components/schemas/Schedule"
+1034         '500':
+1035           description: Internal Server Error
+1036           content:
+1037             "*/*":
+1038               schema:
+1039                 type: array
+1040                 items:
+1041                   "$ref": "#/components/schemas/Schedule"
+1042   "/sensors/{id}":
+1043     get:
+1044       tags:
+1045       - sensor-controller
+1046       summary: Get a sensor by ID
+1047       operationId: getSensorById
+1048       parameters:
+1049       - name: id
+1050         in: path
+1051         required: true
+1052         schema:
+1053           type: integer
+1054           format: int32
+1055       responses:
+1056         '200':
+1057           description: OK
+1058           content:
+1059             "*/*":
+1060               schema:
+1061                 "$ref": "#/components/schemas/Sensor"
+1062         '404':
+1063           description: Sensor not found
+1064           content:
+1065             "*/*":
+1066               schema:
+1067                 "$ref": "#/components/schemas/Sensor"
+1068         '500':
+1069           description: Internal Server Error
+1070           content:
+1071             "*/*":
+1072               schema:
+1073                 "$ref": "#/components/schemas/Sensor"
+1074     delete:
+1075       tags:
+1076       - sensor-controller
+1077       summary: Delete a sensor by ID
+1078       operationId: deleteSensor
+1079       parameters:
+1080       - name: id
+1081         in: path
+1082         required: true
+1083         schema:
+1084           type: integer
+1085           format: int32
+1086       responses:
+1087         '204':
+1088           description: Sensor deleted successfully
+1089         '404':
+1090           description: Sensor not found
+1091         '500':
+1092           description: Internal Server Error
+1093   "/profiles/{id}":
+1094     get:
+1095       tags:
+1096       - profile-controller
+1097       summary: Get a profile by ID
+1098       operationId: getProfileById
+1099       parameters:
+1100       - name: id
+1101         in: path
+1102         required: true
+1103         schema:
+1104           type: integer
+1105           format: int32
+1106       responses:
+1107         '200':
+1108           description: OK
+1109           content:
+1110             "*/*":
+1111               schema:
+1112                 "$ref": "#/components/schemas/Profile"
+1113         '404':
+1114           description: Profile not found
+1115           content:
+1116             "*/*":
+1117               schema:
+1118                 "$ref": "#/components/schemas/Profile"
+1119         '500':
+1120           description: Internal Server Error
+1121           content:
+1122             "*/*":
+1123               schema:
+1124                 "$ref": "#/components/schemas/Profile"
+1125     delete:
+1126       tags:
+1127       - profile-controller
+1128       summary: Delete a profile by ID
+1129       operationId: deleteProfile
+1130       parameters:
+1131       - name: id
+1132         in: path
+1133         required: true
+1134         schema:
+1135           type: integer
+1136           format: int32
+1137       responses:
+1138         '204':
+1139           description: Profile deleted successfully
+1140         '404':
+1141           description: Profile not found
+1142         '500':
+1143           description: Internal Server Error
+1144   "/messages/{id}":
+1145     get:
+1146       tags:
+1147       - message-controller
+1148       summary: Get a message by ID
+1149       operationId: getMessageById
+1150       parameters:
+1151       - name: id
+1152         in: path
+1153         required: true
+1154         schema:
+1155           type: integer
+1156           format: int32
+1157       responses:
+1158         '200':
+1159           description: OK
+1160           content:
+1161             "*/*":
+1162               schema:
+1163                 "$ref": "#/components/schemas/Message"
+1164         '404':
+1165           description: Message not found
+1166           content:
+1167             "*/*":
+1168               schema:
+1169                 "$ref": "#/components/schemas/Message"
+1170         '500':
+1171           description: Internal Server Error
+1172           content:
+1173             "*/*":
+1174               schema:
+1175                 "$ref": "#/components/schemas/Message"
+1176     delete:
+1177       tags:
+1178       - message-controller
+1179       summary: Delete a message by ID
+1180       operationId: deleteMessage
+1181       parameters:
+1182       - name: id
+1183         in: path
+1184         required: true
+1185         schema:
+1186           type: integer
+1187           format: int32
+1188       responses:
+1189         '204':
+1190           description: Message deleted successfully
+1191         '404':
+1192           description: Message not found
+1193         '500':
+1194           description: Internal Server Error
+1195   "/measurements/{id}":
+1196     get:
+1197       tags:
+1198       - measurement-controller
+1199       summary: Get a measurement by ID
+1200       operationId: getMeasurementById
+1201       parameters:
+1202       - name: id
+1203         in: path
+1204         required: true
+1205         schema:
+1206           type: integer
+1207           format: int32
+1208       responses:
+1209         '200':
+1210           description: OK
+1211           content:
+1212             "*/*":
+1213               schema:
+1214                 "$ref": "#/components/schemas/Measurement"
+1215         '404':
+1216           description: Measurement not found
+1217           content:
+1218             "*/*":
+1219               schema:
+1220                 "$ref": "#/components/schemas/Measurement"
+1221         '500':
+1222           description: Internal Server Error
+1223           content:
+1224             "*/*":
+1225               schema:
+1226                 "$ref": "#/components/schemas/Measurement"
+1227     delete:
+1228       tags:
+1229       - measurement-controller
+1230       summary: Delete a measurement by ID
+1231       operationId: deleteMeasurement
+1232       parameters:
+1233       - name: id
+1234         in: path
+1235         required: true
+1236         schema:
+1237           type: integer
+1238           format: int32
+1239       responses:
+1240         '204':
+1241           description: Measurement deleted successfully
+1242         '404':
+1243           description: Measurement not found
+1244         '500':
+1245           description: Internal Server Error
+1246   "/measurements/sensor/{sensorId}":
+1247     get:
+1248       tags:
+1249       - measurement-controller
+1250       summary: Get measurements by sensor ID
+1251       operationId: getMeasurementsBySensorId
+1252       parameters:
+1253       - name: sensorId
+1254         in: path
+1255         required: true
+1256         schema:
+1257           type: integer
+1258           format: int32
+1259       responses:
+1260         '200':
+1261           description: OK
+1262           content:
+1263             "*/*":
+1264               schema:
+1265                 type: array
+1266                 items:
+1267                   "$ref": "#/components/schemas/Measurement"
+1268         '404':
+1269           description: Measurements not found
+1270           content:
+1271             "*/*":
+1272               schema:
+1273                 type: array
+1274                 items:
+1275                   "$ref": "#/components/schemas/Measurement"
+1276         '500':
+1277           description: Internal Server Error
+1278           content:
+1279             "*/*":
+1280               schema:
+1281                 type: array
+1282                 items:
+1283                   "$ref": "#/components/schemas/Measurement"
+1284   "/measurements/date-range":
+1285     get:
+1286       tags:
+1287       - measurement-controller
+1288       summary: Get measurements by date range
+1289       operationId: getMeasurementsByDateRange
+1290       parameters:
+1291       - name: startDate
+1292         in: query
+1293         required: true
+1294         schema:
+1295           type: string
+1296           format: date-time
+1297       - name: endDate
+1298         in: query
+1299         required: true
+1300         schema:
+1301           type: string
+1302           format: date-time
+1303       responses:
+1304         '200':
+1305           description: OK
+1306           content:
+1307             "*/*":
+1308               schema:
+1309                 type: array
+1310                 items:
+1311                   "$ref": "#/components/schemas/Measurement"
+1312         '404':
+1313           description: Measurements not found
+1314           content:
+1315             "*/*":
+1316               schema:
+1317                 type: array
+1318                 items:
+1319                   "$ref": "#/components/schemas/Measurement"
+1320         '500':
+1321           description: Internal Server Error
+1322           content:
+1323             "*/*":
+1324               schema:
+1325                 type: array
+1326                 items:
+1327                   "$ref": "#/components/schemas/Measurement"
+1328   "/devices/{id}":
+1329     get:
+1330       tags:
+1331       - device-controller
+1332       summary: Get a device by ID
+1333       operationId: getDeviceById
+1334       parameters:
+1335       - name: id
+1336         in: path
+1337         required: true
+1338         schema:
+1339           type: integer
+1340           format: int32
+1341       responses:
+1342         '200':
+1343           description: OK
+1344           content:
+1345             "*/*":
+1346               schema:
+1347                 "$ref": "#/components/schemas/Device"
+1348         '404':
+1349           description: Device not found
+1350           content:
+1351             "*/*":
+1352               schema:
+1353                 "$ref": "#/components/schemas/Device"
+1354         '500':
+1355           description: Internal Server Error
+1356           content:
+1357             "*/*":
+1358               schema:
+1359                 "$ref": "#/components/schemas/Device"
+1360     delete:
+1361       tags:
+1362       - device-controller
+1363       summary: Delete a device by ID
+1364       operationId: deleteDevice
+1365       parameters:
+1366       - name: id
+1367         in: path
+1368         required: true
+1369         schema:
+1370           type: integer
+1371           format: int32
+1372       responses:
+1373         '204':
+1374           description: Device deleted successfully
+1375         '404':
+1376           description: Device not found
+1377         '500':
+1378           description: Internal Server Error
+1379   "/commands/{id}":
+1380     get:
+1381       tags:
+1382       - command-controller
+1383       summary: Get a command by ID
+1384       operationId: getCommandById
+1385       parameters:
+1386       - name: id
+1387         in: path
+1388         required: true
+1389         schema:
+1390           type: integer
+1391           format: int32
+1392       responses:
+1393         '200':
+1394           description: OK
+1395           content:
+1396             "*/*":
+1397               schema:
+1398                 "$ref": "#/components/schemas/Command"
+1399         '404':
+1400           description: Command not found
+1401           content:
+1402             "*/*":
+1403               schema:
+1404                 "$ref": "#/components/schemas/Command"
+1405         '500':
+1406           description: Internal Server Error
+1407           content:
+1408             "*/*":
+1409               schema:
+1410                 "$ref": "#/components/schemas/Command"
+1411     delete:
+1412       tags:
+1413       - command-controller
+1414       summary: Delete a command by ID
+1415       operationId: deleteCommand
+1416       parameters:
+1417       - name: id
+1418         in: path
+1419         required: true
+1420         schema:
+1421           type: integer
+1422           format: int32
+1423       responses:
+1424         '204':
+1425           description: Command deleted successfully
+1426         '404':
+1427           description: Command not found
+1428         '500':
+1429           description: Internal Server Error
+1430   "/commands/device/{deviceId}":
+1431     get:
+1432       tags:
+1433       - command-controller
+1434       summary: Get commands by device ID
+1435       operationId: getCommandsByDeviceId
+1436       parameters:
+1437       - name: deviceId
+1438         in: path
+1439         required: true
+1440         schema:
+1441           type: integer
+1442           format: int32
+1443       responses:
+1444         '200':
+1445           description: OK
+1446           content:
+1447             "*/*":
+1448               schema:
+1449                 type: array
+1450                 items:
+1451                   "$ref": "#/components/schemas/Command"
+1452         '404':
+1453           description: Commands not found
+1454           content:
+1455             "*/*":
+1456               schema:
+1457                 type: array
+1458                 items:
+1459                   "$ref": "#/components/schemas/Command"
+1460         '500':
+1461           description: Internal Server Error
+1462           content:
+1463             "*/*":
+1464               schema:
+1465                 type: array
+1466                 items:
+1467                   "$ref": "#/components/schemas/Command"
+1468 components:
+1469   schemas:
+1470     User:
+1471       type: object
+1472       properties:
+1473         userId:
+1474           type: integer
+1475           format: int32
+1476         email:
+1477           type: string
+1478         password:
+1479           type: string
+1480         createdAt:
+1481           type: string
+1482           format: date-time
+1483     Timer:
+1484       type: object
+1485       properties:
+1486         timerId:
+1487           type: integer
+1488           format: int32
+1489         duration:
+1490           type: integer
+1491           format: int32
+1492         startTime:
+1493           type: string
+1494           format: date-time
+1495         endTime:
+1496           type: string
+1497           format: date-time
+1498         status:
+1499           type: string
+1500         createdAt:
+1501           type: string
+1502           format: date-time
+1503         userId:
+1504           type: integer
+1505           format: int32
+1506         systemId:
+1507           type: integer
+1508           format: int32
+1509     ClimateSystem:
+1510       type: object
+1511       properties:
+1512         systemId:
+1513           type: integer
+1514           format: int32
+1515         name:
+1516           type: string
+1517         profileId:
+1518           type: integer
+1519           format: int32
+1520         createdAt:
+1521           type: string
+1522           format: date-time
+1523     Schedule:
+1524       type: object
+1525       properties:
+1526         sheduleId:
+1527           type: integer
+1528           format: int32
+1529         startTime:
+1530           type: string
+1531           format: date-time
+1532         endTime:
+1533           type: string
+1534           format: date-time
+1535         startDate:
+1536           type: string
+1537           format: date-time
+1538         endDate:
+1539           type: string
+1540           format: date-time
+1541         temperature:
+1542           type: number
+1543           format: double
+1544         humidity:
+1545           type: number
+1546           format: double
+1547         profileId:
+1548           type: integer
+1549           format: int32
+1550     Sensor:
+1551       type: object
+1552       properties:
+1553         sensorId:
+1554           type: integer
+1555           format: int32
+1556         serial:
+1557           type: string
+1558         name:
+1559           type: string
+1560         type:
+1561           type: string
+1562         systemId:
+1563           type: integer
+1564           format: int32
+1565         createdAt:
+1566           type: string
+1567           format: date-time
+1568         lastSync:
+1569           type: string
+1570           format: date-time
+1571     Profile:
+1572       type: object
+1573       properties:
+1574         profileId:
+1575           type: integer
+1576           format: int32
+1577         name:
+1578           type: string
+1579         createdAt:
+1580           type: string
+1581           format: date-time
+1582         userId:
+1583           type: integer
+1584           format: int32
+1585         systemId:
+1586           type: integer
+1587           format: int32
+1588     Message:
+1589       type: object
+1590       properties:
+1591         messageId:
+1592           type: integer
+1593           format: int32
+1594         message:
+1595           type: string
+1596         userId:
+1597           type: integer
+1598           format: int32
+1599         createdAt:
+1600           type: string
+1601           format: date-time
+1602     Measurement:
+1603       type: object
+1604       properties:
+1605         measurementId:
+1606           type: integer
+1607           format: int32
+1608         value:
+1609           type: number
+1610           format: double
+1611         sensorId:
+1612           type: integer
+1613           format: int32
+1614         createdAt:
+1615           type: string
+1616           format: date-time
+1617     Device:
+1618       type: object
+1619       properties:
+1620         deviceId:
+1621           type: integer
+1622           format: int32
+1623         serial:
+1624           type: string
+1625         name:
+1626           type: string
+1627         power:
+1628           type: number
+1629           format: float
+1630         mode:
+1631           type: string
+1632         type:
+1633           type: string
+1634         systemId:
+1635           type: integer
+1636           format: int32
+1637         createdAt:
+1638           type: string
+1639           format: date-time
+1640     Command:
+1641       type: object
+1642       properties:
+1643         commandId:
+1644           type: integer
+1645           format: int32
+1646         value:
+1647           type: number
+1648           format: double
+1649         deviceId:
+1650           type: integer
+1651           format: int32
+1652         createdAt:
+1653           type: string
+1654           format: date-time
+
+
+
+
+ 
+ДОДАТОК Д
+ПРОГРАМНИЙ КОД
+
+Приклад створенної моделі(сутність):
+package nure.atrk.climate_control.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "commands")
+public class Command {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "command_id")
+    private int commandId;
+
+    @Column(name = "value")
+    private double value;
+
+    @Column(name = "device_id")
+    private int deviceId;
+
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private Timestamp createdAt;
+
+    @ManyToOne
+    @JoinColumn(name = "device_id", insertable = false, updatable = false)
+    @JsonIgnore
+    private Device device;
+
+    @PrePersist
+    public void onCreate() {
+        createdAt = new Timestamp(System.currentTimeMillis());
+    }
+}
+
+Приклад створеного репозиторія(взаємодія с БД через ORM):
+package nure.atrk.climate_control.repository;
+
+import nure.atrk.climate_control.entity.Command;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface CommandRepository extends JpaRepository<Command, Integer>{
+    List<Command> findAllByDeviceId(int deviceId);
+}
+
+Приклад створеного контролера(для взаємодії з клієнтом та задання маршрутів):
+package nure.atrk.climate_control.controller;
+
+import nure.atrk.climate_control.entity.Command;
+import nure.atrk.climate_control.repository.CommandRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/commands")
+public class CommandController {
+    @Autowired
+    private CommandRepository commandRepository;
+
+    @GetMapping
+    @Operation(summary = "Get all commands")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "OK"),
+        @ApiResponse(responseCode = "500", description = "Internal Server Error")
+    })
+    public List<Command> getAllCommands() {
+        return commandRepository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get a command by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "OK"),
+        @ApiResponse(responseCode = "404", description = "Command not found"),
+        @ApiResponse(responseCode = "500", description = "Internal Server Error")
+    })
+    public ResponseEntity<Command> getCommandById(@PathVariable int id) {
+        Command command = commandRepository.findById(id).orElse(null);
+        if (command == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(command);
+    }
+
+    @PostMapping
+    @Operation(summary = "Add a new command")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Command added successfully"),
+        @ApiResponse(responseCode = "500", description = "Internal Server Error")
+    })
+    public ResponseEntity<Command> addCommand(@RequestBody Command command) {
+        commandRepository.save(command);
+        return ResponseEntity.ok(command);
+    }
+
+    @PutMapping
+    @Operation(summary = "Update an existing command")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Command updated successfully"),
+        @ApiResponse(responseCode = "500", description = "Internal Server Error")
+    })
+    public ResponseEntity<Command> updateCommand(@RequestBody Command command) {
+        commandRepository.save(command);
+        return ResponseEntity.ok(command);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a command by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Command deleted successfully"),
+        @ApiResponse(responseCode = "404", description = "Command not found"),
+        @ApiResponse(responseCode = "500", description = "Internal Server Error")
+    })
+    public ResponseEntity<Void> deleteCommand(@PathVariable int id) {
+        if(commandRepository.existsById(id)) {
+            commandRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/device/{deviceId}")
+    @Operation(summary = "Get commands by device ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "404", description = "Commands not found"),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error")
+    })
+    public ResponseEntity<List<Command>> getCommandsByDeviceId(@PathVariable int deviceId) {
+        List<Command> commands = commandRepository.findAllByDeviceId(deviceId);
+        if (commands.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(commands);
+    }
+}

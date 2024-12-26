@@ -1,5 +1,6 @@
 package nure.atrk.climate_control.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,7 +23,7 @@ public class Profile {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", insertable = false, updatable = false)
     private Timestamp createdAt;
 
     @Column(name = "user_id")
@@ -33,12 +34,19 @@ public class Profile {
 
     @ManyToOne
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JsonIgnore
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "system_id", insertable = false, updatable = false)
-    private ClimateSystem system;
+    @OneToMany(mappedBy = "profile")
+    @JsonIgnore
+    private Set<ClimateSystem> systems;
 
     @OneToMany(mappedBy = "profile")
-    private Set<Shedule> shedules;
+    @JsonIgnore
+    private Set<Schedule> schedules;
+
+    @PrePersist
+    public void onCreate() {
+        createdAt = new Timestamp(System.currentTimeMillis());
+    }
 }

@@ -1,5 +1,7 @@
 package nure.atrk.climate_control.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,10 +26,16 @@ public class Command {
     @Column(name = "device_id")
     private int deviceId;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", insertable = false, updatable = false)
     private Timestamp createdAt;
 
     @ManyToOne
     @JoinColumn(name = "device_id", insertable = false, updatable = false)
+    @JsonIgnore
     private Device device;
+
+    @PrePersist
+    public void onCreate() {
+        createdAt = new Timestamp(System.currentTimeMillis());
+    }
 }

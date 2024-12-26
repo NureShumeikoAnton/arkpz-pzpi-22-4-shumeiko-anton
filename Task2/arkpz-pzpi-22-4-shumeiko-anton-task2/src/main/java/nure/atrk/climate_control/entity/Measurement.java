@@ -1,5 +1,6 @@
 package nure.atrk.climate_control.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,10 +25,16 @@ public class Measurement {
     @Column(name = "sensor_id")
     private int sensorId;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", insertable = false, updatable = false)
     private Timestamp createdAt;
 
     @ManyToOne
     @JoinColumn(name = "sensor_id", insertable = false, updatable = false)
+    @JsonIgnore
     private Sensor sensor;
+
+    @PrePersist
+    public void onCreate() {
+        this.createdAt = new Timestamp(System.currentTimeMillis());
+    }
 }

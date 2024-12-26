@@ -1,5 +1,8 @@
 package nure.atrk.climate_control.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,7 +34,7 @@ public class Sensor {
     @Column(name = "system_id")
     private int systemId;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", insertable = false, updatable = false)
     private Timestamp createdAt;
 
     @Column(name = "last_sync")
@@ -39,8 +42,15 @@ public class Sensor {
 
     @ManyToOne
     @JoinColumn(name = "system_id", insertable = false, updatable = false)
+    @JsonIgnore
     private ClimateSystem system;
 
     @OneToMany(mappedBy = "sensor")
+    @JsonIgnore
     private Set<Measurement> measurements;
+
+    @PrePersist
+    public void onCreate() {
+        createdAt = new Timestamp(System.currentTimeMillis());
+    }
 }

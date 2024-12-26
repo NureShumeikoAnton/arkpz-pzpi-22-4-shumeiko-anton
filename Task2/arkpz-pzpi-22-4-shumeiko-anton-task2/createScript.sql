@@ -1,19 +1,24 @@
 CREATE
-    database climate_db;
+database climate_db;
+
+USE
+climate_db;
 
 CREATE TABLE systems
 (
     system_id  INT AUTO_INCREMENT PRIMARY KEY,
     name       VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    profile_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (profile_id) REFERENCES profiles (profile_id)
 );
 
 CREATE TABLE users
 (
-    user_id       INT AUTO_INCREMENT PRIMARY KEY,
-    email         VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    user_id    INT AUTO_INCREMENT PRIMARY KEY,
+    email      VARCHAR(255) NOT NULL UNIQUE,
+    password   VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE devices
@@ -73,10 +78,8 @@ CREATE TABLE profiles
     profile_id INT AUTO_INCREMENT PRIMARY KEY,
     name       VARCHAR(100) NOT NULL,
     user_id    INT          NOT NULL,
-    system_id  INT          NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (user_id),
-    FOREIGN KEY (system_id) REFERENCES systems (system_id)
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
 );
 
 CREATE TABLE schedules
@@ -98,19 +101,19 @@ CREATE TABLE timers
     user_id    INT NOT NULL,
     system_id  INT NOT NULL,
     duration   INT NOT NULL,
-    start_time TIMESTAMP                                 DEFAULT CURRENT_TIMESTAMP,
+    start_time TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
     end_time   TIMESTAMP AS (start_time + INTERVAL duration MINUTE) STORED,
     status     VARCHAR(25) DEFAULT 'active',
-    created_at TIMESTAMP                                 DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (user_id),
     FOREIGN KEY (system_id) REFERENCES systems (system_id)
 );
 
 CREATE TABLE system_users
 (
-    user_id    INT NOT NULL,
-    system_id  INT NOT NULL,
-    role       VARCHAR(25),
+    user_id   INT NOT NULL,
+    system_id INT NOT NULL,
+    role      VARCHAR(25),
     FOREIGN KEY (user_id) REFERENCES users (user_id),
     FOREIGN KEY (system_id) REFERENCES systems (system_id),
     PRIMARY KEY (user_id, system_id)

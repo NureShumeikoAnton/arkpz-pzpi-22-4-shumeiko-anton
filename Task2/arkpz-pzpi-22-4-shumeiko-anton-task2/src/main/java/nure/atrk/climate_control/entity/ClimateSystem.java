@@ -1,5 +1,6 @@
 package nure.atrk.climate_control.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -22,7 +23,9 @@ public class ClimateSystem {
     private int systemId;
     @Column(name="name")
     private String name;
-    @Column(name = "created_at")
+    @Column(name="profile_id")
+    private Integer profileId;
+    @Column(name = "created_at", insertable = false, updatable = false)
     private Timestamp createdAt;
 
     @OneToMany(mappedBy = "system")
@@ -30,14 +33,24 @@ public class ClimateSystem {
     private Set<SystemUser> systemUsers;
 
     @OneToMany(mappedBy = "system")
+    @JsonIgnore
     private Set<Device> devices;
 
     @OneToMany(mappedBy = "system")
+    @JsonIgnore
     private Set<Sensor> sensors;
 
-    @OneToMany(mappedBy = "system")
-    private Set<Profile> profiles;
+    @ManyToOne
+    @JoinColumn(name = "profile_id", insertable = false, updatable = false)
+    @JsonIgnore
+    private Profile profile;
 
     @OneToMany(mappedBy = "system")
+    @JsonIgnore
     private Set<Timer> timers;
+
+    @PrePersist
+    public void onCreate() {
+        createdAt = new Timestamp(System.currentTimeMillis());
+    }
 }
