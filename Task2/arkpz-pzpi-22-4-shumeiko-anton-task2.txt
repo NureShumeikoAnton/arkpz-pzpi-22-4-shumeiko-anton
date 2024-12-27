@@ -56,7 +56,6 @@ UML-діаграма прецедентів описує основні ролі
 
 	У результаті виконання лабораторної роботи, по-перше, було розроблено UML-діаграму прецедентів та ER-діаграму даних програмної системи для клімат-контролю с особистими профілями. На основі створених діаграм було створено базу даних з використанням СУБД MySQL. Її структуру було описано за допомогою схеми бази даних. Для спрощення взаємодії із базою даних було використано сучасну ORM Spring Hibernate, що забезпечую базові функції для взаємодії із СУБД. Для забезпечення взаємодії із клієнтською частиною застосунку було розроблено API на базі архітектури REST. Наприкінці було проведено тестування написаного програмного коду. 
 Результати тестування містяться у відеозвіті: https://youtu.be/cGkRlRAc3kE
-	
 
 ДОДАТОК А
 UML ДІАГРАМА ПРЕЦЕДЕНТІВ
@@ -1756,154 +1755,155 @@ ER-ДІАГРАМА ДАНИХ
 ПРОГРАМНИЙ КОД
 
 Приклад створеної моделі(сутність):
-package nure.atrk.climate_control.entity;
+1 package nure.atrk.climate_control.entity;
+2 
+3 import com.fasterxml.jackson.annotation.JsonIgnore;
+4 import com.fasterxml.jackson.annotation.JsonManagedReference;
+5 import jakarta.persistence.*;
+6 import lombok.AllArgsConstructor;
+7 import lombok.Data;
+8 import lombok.NoArgsConstructor;
+9 
+10 import java.sql.Timestamp;
+11 
+12 @Data
+13 @AllArgsConstructor
+14 @NoArgsConstructor
+15 @Entity
+16 @Table(name = "commands")
+17 public class Command {
+18     @Id
+19     @GeneratedValue(strategy = GenerationType.IDENTITY)
+20     @Column(name = "command_id")
+21     private int commandId;
+22 
+23     @Column(name = "value")
+24     private double value;
+25 
+26     @Column(name = "device_id")
+27     private int deviceId;
+28 
+29     @Column(name = "created_at", insertable = false, updatable = false)
+30     private Timestamp createdAt;
+31 
+32     @ManyToOne
+33     @JoinColumn(name = "device_id", insertable = false, updatable = false)
+34     @JsonIgnore
+35     private Device device;
+36 
+37     @PrePersist
+38     public void onCreate() {
+39         createdAt = new Timestamp(System.currentTimeMillis());
+40     }
+41 }
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.sql.Timestamp;
-
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Entity
-@Table(name = "commands")
-public class Command {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "command_id")
-    private int commandId;
-
-    @Column(name = "value")
-    private double value;
-
-    @Column(name = "device_id")
-    private int deviceId;
-
-    @Column(name = "created_at", insertable = false, updatable = false)
-    private Timestamp createdAt;
-
-    @ManyToOne
-    @JoinColumn(name = "device_id", insertable = false, updatable = false)
-    @JsonIgnore
-    private Device device;
-
-    @PrePersist
-    public void onCreate() {
-        createdAt = new Timestamp(System.currentTimeMillis());
-    }
-}
 
 Приклад створеного репозиторія(взаємодія с БД через ORM):
-package nure.atrk.climate_control.repository;
-
-import nure.atrk.climate_control.entity.Command;
-import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.List;
-
-public interface CommandRepository extends JpaRepository<Command, Integer>{
-    List<Command> findAllByDeviceId(int deviceId);
-}
+1 package nure.atrk.climate_control.repository;
+2 
+3 import nure.atrk.climate_control.entity.Command;
+4 import org.springframework.data.jpa.repository.JpaRepository;
+5 
+6 import java.util.List;
+7 
+8 public interface CommandRepository extends JpaRepository<Command, Integer>{
+9     List<Command> findAllByDeviceId(int deviceId);
+10 }
 
 Приклад створеного контролера(для взаємодії з клієнтом та задання маршрутів):
-package nure.atrk.climate_control.controller;
-
-import nure.atrk.climate_control.entity.Command;
-import nure.atrk.climate_control.repository.CommandRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-
-import java.util.List;
-
-@RestController
-@RequestMapping("/commands")
-public class CommandController {
-    @Autowired
-    private CommandRepository commandRepository;
-
-    @GetMapping
-    @Operation(summary = "Get all commands")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "OK"),
-        @ApiResponse(responseCode = "500", description = "Internal Server Error")
-    })
-    public List<Command> getAllCommands() {
-        return commandRepository.findAll();
-    }
-
-    @GetMapping("/{id}")
-    @Operation(summary = "Get a command by ID")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "OK"),
-        @ApiResponse(responseCode = "404", description = "Command not found"),
-        @ApiResponse(responseCode = "500", description = "Internal Server Error")
-    })
-    public ResponseEntity<Command> getCommandById(@PathVariable int id) {
-        Command command = commandRepository.findById(id).orElse(null);
-        if (command == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(command);
-    }
-
-    @PostMapping
-    @Operation(summary = "Add a new command")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Command added successfully"),
-        @ApiResponse(responseCode = "500", description = "Internal Server Error")
-    })
-    public ResponseEntity<Command> addCommand(@RequestBody Command command) {
-        commandRepository.save(command);
-        return ResponseEntity.ok(command);
-    }
-
-    @PutMapping
-    @Operation(summary = "Update an existing command")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Command updated successfully"),
-        @ApiResponse(responseCode = "500", description = "Internal Server Error")
-    })
-    public ResponseEntity<Command> updateCommand(@RequestBody Command command) {
-        commandRepository.save(command);
-        return ResponseEntity.ok(command);
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a command by ID")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Command deleted successfully"),
-        @ApiResponse(responseCode = "404", description = "Command not found"),
-        @ApiResponse(responseCode = "500", description = "Internal Server Error")
-    })
-    public ResponseEntity<Void> deleteCommand(@PathVariable int id) {
-        if(commandRepository.existsById(id)) {
-            commandRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    @GetMapping("/device/{deviceId}")
-    @Operation(summary = "Get commands by device ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK"),
-            @ApiResponse(responseCode = "404", description = "Commands not found"),
-            @ApiResponse(responseCode = "500", description = "Internal Server Error")
-    })
-    public ResponseEntity<List<Command>> getCommandsByDeviceId(@PathVariable int deviceId) {
-        List<Command> commands = commandRepository.findAllByDeviceId(deviceId);
-        if (commands.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(commands);
-    }
-}
+1 package nure.atrk.climate_control.controller;
+2 
+3 import nure.atrk.climate_control.entity.Command;
+4 import nure.atrk.climate_control.repository.CommandRepository;
+5 import org.springframework.beans.factory.annotation.Autowired;
+6 import org.springframework.http.ResponseEntity;
+7 import org.springframework.web.bind.annotation.*;
+8 import io.swagger.v3.oas.annotations.Operation;
+9 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+10 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+11 
+12 import java.util.List;
+13 
+14 @RestController
+15 @RequestMapping("/commands")
+16 public class CommandController {
+17     @Autowired
+18     private CommandRepository commandRepository;
+19 
+20     @GetMapping
+21     @Operation(summary = "Get all commands")
+22     @ApiResponses(value = {
+23         @ApiResponse(responseCode = "200", description = "OK"),
+24         @ApiResponse(responseCode = "500", description = "Internal Server Error")
+25     })
+26     public List<Command> getAllCommands() {
+27         return commandRepository.findAll();
+28     }
+29 
+30     @GetMapping("/{id}")
+31     @Operation(summary = "Get a command by ID")
+32     @ApiResponses(value = {
+33         @ApiResponse(responseCode = "200", description = "OK"),
+34         @ApiResponse(responseCode = "404", description = "Command not found"),
+35         @ApiResponse(responseCode = "500", description = "Internal Server Error")
+36     })
+37     public ResponseEntity<Command> getCommandById(@PathVariable int id) {
+38         Command command = commandRepository.findById(id).orElse(null);
+39         if (command == null) {
+40             return ResponseEntity.notFound().build();
+41         }
+42         return ResponseEntity.ok(command);
+43     }
+44 
+45     @PostMapping
+46     @Operation(summary = "Add a new command")
+47     @ApiResponses(value = {
+48         @ApiResponse(responseCode = "200", description = "Command added successfully"),
+49         @ApiResponse(responseCode = "500", description = "Internal Server Error")
+50     })
+51     public ResponseEntity<Command> addCommand(@RequestBody Command command) {
+52         commandRepository.save(command);
+53         return ResponseEntity.ok(command);
+54     }
+55 
+56     @PutMapping
+57     @Operation(summary = "Update an existing command")
+58     @ApiResponses(value = {
+59         @ApiResponse(responseCode = "200", description = "Command updated successfully"),
+60         @ApiResponse(responseCode = "500", description = "Internal Server Error")
+61     })
+62     public ResponseEntity<Command> updateCommand(@RequestBody Command command) {
+63         commandRepository.save(command);
+64         return ResponseEntity.ok(command);
+65     }
+66 
+67     @DeleteMapping("/{id}")
+68     @Operation(summary = "Delete a command by ID")
+69     @ApiResponses(value = {
+70         @ApiResponse(responseCode = "204", description = "Command deleted successfully"),
+71         @ApiResponse(responseCode = "404", description = "Command not found"),
+72         @ApiResponse(responseCode = "500", description = "Internal Server Error")
+73     })
+74     public ResponseEntity<Void> deleteCommand(@PathVariable int id) {
+75         if(commandRepository.existsById(id)) {
+76             commandRepository.deleteById(id);
+77             return ResponseEntity.noContent().build();
+78         }
+79         return ResponseEntity.notFound().build();
+80     }
+81 
+82     @GetMapping("/device/{deviceId}")
+83     @Operation(summary = "Get commands by device ID")
+84     @ApiResponses(value = {
+85             @ApiResponse(responseCode = "200", description = "OK"),
+86             @ApiResponse(responseCode = "404", description = "Commands not found"),
+87             @ApiResponse(responseCode = "500", description = "Internal Server Error")
+88     })
+89     public ResponseEntity<List<Command>> getCommandsByDeviceId(@PathVariable int deviceId) {
+90         List<Command> commands = commandRepository.findAllByDeviceId(deviceId);
+91         if (commands.isEmpty()) {
+92             return ResponseEntity.notFound().build();
+93         }
+94         return ResponseEntity.ok(commands);
+95     }
+96 }
