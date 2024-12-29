@@ -1,0 +1,799 @@
+Харківський університет радіоелектроніки
+Факультет комп'ютерних наук
+Кафедра програмної інженерії
+
+
+
+
+ЗВІТ
+до лабораторної роботи №3 з дисципліни
+"Аналіз та рефакторинг коду"
+на тему: "РОЗРОБКА БІЗНЕС-ЛОГІКИ ТА ФУНКЦІЙ АДМІНІСТРУВАННЯ СЕРВЕРНОЇ ЧАСТИНИ ПРОГРАМНОЇ СИСТЕМИ"
+
+
+
+Виконав ст. гр. ПЗПІ-22-4
+Шумейко Антон Олександрович
+
+Перевірив
+ст. викладач кафедри ПІ
+Сокорчук Ігор Петрович
+
+
+
+
+
+
+
+
+Харків 2024
+1 МЕТА
+
+Метою лабораторної роботи є розробка бізнес-логіки та функцій адміністрування серверної частини програмної системи для клімат-контролю з особистими профілями.
+
+2 ХІД РОБОТИ
+
+	В ході виконання лабораторної роботи було реалізовано певну бізнес-логіку серверної частини застосунку:
+ Авторизація користувача: реалізовано механізм авторизації користувача через введення логіна і пароля. Для забезпечення безпеки використано токени доступу (JWT), що дозволяють перевіряти права доступу користувача до різних ресурсів системи.
+ Відправка повідомлення для користувача: забезпечено функціонал для автоматичного відправлення повідомлень користувачам. Повідомлення надсилаються через SMTP-протокол з використанням електронної пошти, щоб інформувати користувачів про важливі події, такі як досягнення критичних параметрів обладнання.
+ Хешування паролю: використано алгоритм хешування BCrypt для захисту паролів користувачів у базі даних. Це забезпечує безпечне зберігання даних і захищає від несанкціонованого доступу.
+ Адміністрування бази даних: створення резервних копій бази даних для забезпечення її безпеки та можливості відновлення у разі втрати даних. Процес кодування резервних копій гарантує їх захищеність від несанкціонованого доступу.
+ Кодування створених резервних копій: для забезпечення безпеки резервні копії даних кодуються перед збереженням з використанням кодування AES-256. Це захищає їх від викрадення або втрати в разі витоку даних.
+ Математична аналітика: представлення користувачу можливості обчислення основних статистичних показників, таких як середнє значення, медіана, стандартне відхилення, мінімум і максимум, на основі даних вимірювань за вказаній період часу. Додатково реалізовано визначення пікових навантажень за допомогою 95-го перцентиля, що дозволяє виявляти критичні стани системи.
+ Автоматичне керування обладнанням: система автоматичного управління аналізує вимірювання з сенсорів і порівнює їх з цільовими значеннями профілю користувача, визначеними активним розкладом. На основі різниці між поточними й цільовими параметрами пристрої налаштовуються автоматично для досягнення оптимальних умов. Для кожного пристрою розраховується новий рівень потужності, який враховує режим роботи та поточне навантаження. У разі перевантаження системи користувачам надсилаються сповіщення електронною поштою.
+ Прорахунок передбачень: дозволяє користувачу виконати передбачення на основі трендів, обчислених за допомогою методу лінійної регресії. На основі історичних даних система розраховує майбутні значення показників і визначає точний час, коли можуть виникнути потенційні ризики або аномалії.
+Також були створені UML-діаграми діяльності для графічного відображення процесів автоматичного керування обладнанням, створення резервної копії та відновлення даних з резервної копії. Вони представлені у додатку А. Також була створена UML-діаграма взаємодії для відображення процесу авторизації користувача. Вона представлена у додатку Б.
+
+3 ВИСНОВКИ
+
+	Результатом виконання лабораторної роботи є розроблена бізнес-логіка для серверної частини програмної системи для клімат-контролю з особистими профілями. Також було створено UML діаграми діяльності та взаємодії.
+За результатами тестування створено відеозвіт: https://youtu.be/xhYhBV0X9sw
+ДОДАТОК А
+UML ДІАГРАМИ ДІЯЛЬНОСТІ
+ 
+Рисунок А.1 – UML діаграма автоматичного корегування налаштувань обладнання
+ 
+Рисунок А.2 – UML діаграма створення резервної копії даних
+
+ 
+Рисунок А.3 – UML діаграма відновлення даних з резервної копії
+ 
+ДОДАТОК Б
+UML ДІАГРАМА ВЗАЄМОДІЇ
+
+ 
+Рисунок Б.1 – UML діаграма автентифікації користувача
+ 
+ДОДАТОК В
+ФРАГМЕНТИ ПРОГРАМНОГО КОДУ
+
+Реєстрація та авторизація користувачу:
+1 package nure.atrk.climate_control.service;
+2 
+3 import nure.atrk.climate_control.entity.User;
+4 import nure.atrk.climate_control.util.JwtUtil;
+5 import org.springframework.beans.factory.annotation.Autowired;
+6 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+7 import org.springframework.stereotype.Service;
+8 import nure.atrk.climate_control.repository.UserRepository;
+9 
+10 import java.util.Optional;
+11 
+12 @Service
+13 public class AuthService {
+14     @Autowired
+15     private UserRepository userRepository;
+16 
+17     @Autowired
+18     private JwtUtil jwtUtil;
+19 
+20     private BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+21 
+22     public boolean register(User user){
+23         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+24             return false;
+25         }
+26         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+27         userRepository.save(user);
+28         return true;
+29     }
+30 
+31     public String login(String email, String password){
+32         Optional<User> existingUser = userRepository.findByEmail(email);
+33         if(existingUser.isPresent()){
+34             User user = existingUser.get();
+35             if(bCryptPasswordEncoder.matches(password, user.getPassword())){
+36                 return jwtUtil.generateToken(email);
+37             }
+38         }
+39         return null;
+40     }
+41 }
+
+1 package nure.atrk.climate_control.util;
+2 
+3 import io.jsonwebtoken.Claims;
+4 import io.jsonwebtoken.Jwts;
+5 import io.jsonwebtoken.SignatureAlgorithm;
+6 import io.jsonwebtoken.security.Keys;
+7 import org.springframework.stereotype.Component;
+8 
+9 import java.security.Key;
+10 import java.util.Date;
+11 
+12 @Component
+13 public class JwtUtil {
+14     private static final Key SECRET = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+15 
+16     public static String generateToken(String email) {
+17         return Jwts.builder()
+18                 .setSubject(email)
+19                 .setIssuedAt(new Date())
+20                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
+21                 .signWith(SignatureAlgorithm.HS256, SECRET)
+22                 .compact();
+23     }
+24 
+25     public static String getEmailFromToken(String token) {
+26         return Jwts.parser()
+27                 .setSigningKey(SECRET)
+28                 .parseClaimsJws(token)
+29                 .getBody()
+30                 .getSubject();
+31     }
+32 
+33     public static boolean validateToken(String token, String email) {
+34         return email.equals(getEmailFromToken(token)) && !isTokenExpired(token);
+35     }
+36 
+37     private static boolean isTokenExpired(String token) {
+38         return Jwts.parser()
+39                 .setSigningKey(SECRET)
+40                 .parseClaimsJws(token)
+41                 .getBody()
+42                 .getExpiration()
+43                 .before(new Date());
+44     }
+45 
+46     public static Claims extractAllClaims(String token) {
+47         return Jwts.parser()
+48                 .setSigningKey(SECRET)
+49                 .parseClaimsJws(token)
+50                 .getBody();
+51     }
+52 }
+
+Аналіз вимірів:
+
+1 package nure.atrk.climate_control.service;
+2 
+3 import nure.atrk.climate_control.entity.*;
+4 import nure.atrk.climate_control.repository.*;
+5 import org.springframework.beans.factory.annotation.Autowired;
+6 import org.springframework.stereotype.Service;
+7 
+8 import java.sql.Date;
+9 import java.sql.Time;
+10 import java.time.LocalDateTime;
+11 
+12 
+13 @Service
+14 public class MeasurementService {
+15     @Autowired
+16     private CommandService commandService;
+17     @Autowired
+18     private ScheduleRepository scheduleRepository;
+19     @Autowired
+20     private SensorRepository sensorRepository;
+21     @Autowired
+22     private SystemRepository systemRepository;
+23     @Autowired
+24     private ProfileRepository profileRepository;
+25 
+26     public void processMeasurement(Measurement measurement) {
+27         System.out.println("Processing measurement: " + measurement);
+28         Sensor sensor = sensorRepository.findById(measurement.getSensorId()).orElse(null);
+29         if (sensor == null) {
+30             return;
+31         }
+32         ClimateSystem system = systemRepository.findById(sensor.getSystemId()).orElse(null);
+33         if (system == null) {
+34             return;
+35         }
+36         if(system.getProfileId() == null) {
+37             return;
+38         }
+39         Profile activeProfile = profileRepository.findById(system.getProfileId()).orElse(null);
+40         if (activeProfile == null) {
+41             return;
+42         }
+43 
+44         LocalDateTime now = LocalDateTime.now();
+45         Date currentDate = Date.valueOf(now.toLocalDate());
+46         Time currentTime = Time.valueOf(now.toLocalTime());
+47 
+48         Schedule activeSchedule = scheduleRepository.findActiveSchedule(
+49                 activeProfile.getProfileId(),
+50                 currentDate,
+51                 currentTime
+52         );
+53         if (activeSchedule == null) {
+54             return;
+55         }
+56         System.out.println("Fetched");
+57 
+58         String type = sensor.getType();
+59         double targetValue = -1;
+60         double currentValue = measurement.getValue();
+61         System.out.println("Current value: " + currentValue);
+62 
+63         switch (type) {
+64             case "temperature":
+65                 targetValue = activeSchedule.getTemperature();
+66                 break;
+67             case "humidity":
+68                 targetValue = activeSchedule.getHumidity();
+69                 break;
+70             default:
+71                 break;
+72         }
+73 
+74         if (targetValue == -1) {
+75             return;
+76         }
+77         double difference = targetValue - currentValue;
+78         System.out.println("Difference: " + difference);
+79 
+80         commandService.adjustDevice(system, type, difference);
+81     }
+82 }
+
+Відправка команд:
+
+1 package nure.atrk.climate_control.service;
+2 
+3 import nure.atrk.climate_control.entity.ClimateSystem;
+4 import nure.atrk.climate_control.entity.Command;
+5 import nure.atrk.climate_control.entity.Device;
+6 import nure.atrk.climate_control.entity.User;
+7 import nure.atrk.climate_control.repository.CommandRepository;
+8 import nure.atrk.climate_control.repository.DeviceRepository;
+9 import org.springframework.beans.factory.annotation.Autowired;
+10 import org.springframework.mail.SimpleMailMessage;
+11 import org.springframework.mail.javamail.JavaMailSender;
+12 import org.springframework.stereotype.Service;
+13 
+14 import java.sql.Timestamp;
+15 import java.util.List;
+16 
+17 @Service
+18 public class CommandService {
+19     @Autowired
+20     private CommandRepository commandRepository;
+21     @Autowired
+22     private DeviceRepository deviceRepository;
+23     @Autowired
+24     private SystemUserService systemUserService;
+25     @Autowired
+26     private JavaMailSender mailSender;
+27 
+28     public void adjustDevice(ClimateSystem system, String type, double difference) {
+29         String modifiedType = type;
+30         if (difference > 0) {
+31             modifiedType += "_up";
+32         } else {
+33             modifiedType += "_down";
+34         }
+35         List<Device> devices = deviceRepository.findAllBySystemIdAndType(system.getSystemId(), modifiedType);
+36         System.out.println("Devices adjusted");
+37 
+38         if (Math.abs(difference) < 1) {
+39             for (Device device : devices) {
+40                 if (device.getMode().equals("eco")) {
+41                     Command command = new Command();
+42                     command.setDeviceId(device.getDeviceId());
+43                     command.setValue(0);
+44                     command.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+45                     commandRepository.save(command);
+46                 }
+47             }
+48             return;
+49         }
+50 
+51         System.out.println("Adjusting devices");
+52 
+53         for (Device device : devices) {
+54             System.out.println("Adjusting device: " + device.getDeviceId());
+55             double currentPower = device.getPower();
+56             double adjustmentFactor = 10;
+57             double newPower = currentPower + adjustmentFactor * Math.abs(difference);
+58 
+59             newPower = Math.max(0, Math.min(100, newPower));
+60             System.out.println("New power: " + newPower);
+61 
+62             Command command = new Command();
+63             command.setDeviceId(device.getDeviceId());
+64             command.setValue(newPower);
+65             command.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+66             commandRepository.save(command);
+67 
+68             if (newPower == 100) {
+69                 System.out.println("Sending notification");
+70                 sendNotificationToUsers(system.getSystemId(), device);
+71             }
+72         }
+73 
+74         modifiedType = type;
+75         if (difference > 0) {
+76             modifiedType += "_down";
+77         } else {
+78             modifiedType += "_up";
+79         }
+80 
+81         List<Device> oppositeDevices = deviceRepository.findAllBySystemIdAndType(system.getSystemId(), modifiedType);
+82 
+83         for (Device device : oppositeDevices) {
+84             Command command = new Command();
+85             command.setDeviceId(device.getDeviceId());
+86             command.setValue(0);
+87             command.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+88             commandRepository.save(command);
+89         }
+90     }
+91 
+92     private void sendNotificationToUsers(int systemId, Device device) {
+93         System.out.println(systemId);
+94         List<User> users = systemUserService.getUsersBySystemId(systemId);
+95         for (User user : users) {
+96             System.out.println("Sending email to " + user.getEmail());
+97             sendEmail(user.getEmail(), device.getDeviceId());
+98         }
+99     }
+100 
+101     private void sendEmail(String to, int deviceId) {
+102         SimpleMailMessage message = new SimpleMailMessage();
+103         message.setFrom("shumejko.sasha@gmail.com");
+104         message.setTo(to);
+105         message.setSubject("Device Load Notification");
+106         message.setText("The device with ID " + deviceId + " has reached 100% load.");
+107         mailSender.send(message);
+108     }
+109 }
+
+Математичний аналіз:
+
+1 package nure.atrk.climate_control.statistics;
+2 
+3 import java.util.Arrays;
+4 
+5 public class DescriptiveStatistics {
+6     private double[] data;
+7     private int size;
+8 
+9     public DescriptiveStatistics() {
+10         data = new double[0];
+11         size = 0;
+12     }
+13 
+14     public void addValue(double value) {
+15         data = Arrays.copyOf(data, size + 1);
+16         data[size++] = value;
+17     }
+18 
+19     public double getMean() {
+20         double sum = 0.0;
+21         for (double a : data) {
+22             sum += a;
+23         }
+24         return sum / size;
+25     }
+26 
+27     public double getMedian() {
+28         Arrays.sort(data);
+29         if (size % 2 == 0) {
+30             return (data[size / 2 - 1] + data[size / 2]) / 2.0;
+31         } else {
+32             return data[size / 2];
+33         }
+34     }
+35 
+36     public double getStandardDeviation() {
+37         double mean = getMean();
+38         double sum = 0.0;
+39         for (double a : data) {
+40             sum += Math.pow(a - mean, 2);
+41         }
+42         return Math.sqrt(sum / size);
+43     }
+44 
+45     public double getMin() {
+46         double min = data[0];
+47         for (double a : data) {
+48             if (a < min) {
+49                 min = a;
+50             }
+51         }
+52         return min;
+53     }
+54 
+55     public double getMax() {
+56         double max = data[0];
+57         for (double a : data) {
+58             if (a > max) {
+59                 max = a;
+60             }
+61         }
+62         return max;
+63     }
+64 
+65     public double getPercentile(double percentile) {
+66     if (data == null || data.length == 0) {
+67         throw new IllegalArgumentException("Data array cannot be null or empty");
+68     }
+69 
+70     // Sort the data in ascending order
+71     Arrays.sort(data);
+72 
+73     // Calculate the index of the percentile
+74     int n = data.length;
+75     double index = (percentile / 100) * (n - 1);
+76 
+77     // Check if the index is an integer
+78     int lowerIndex = (int) index;
+79     double diff = index - lowerIndex;
+80 
+81     // If it's an integer, no need to interpolate
+82     if (diff == 0) {
+83         return data[lowerIndex];
+84     }
+85 
+86     // Interpolate between the two nearest values
+87     double upperValue = data[lowerIndex + 1];
+88     double lowerValue = data[lowerIndex];
+89     return lowerValue + diff * (upperValue - lowerValue);
+90 }
+91 }
+
+1 package nure.atrk.climate_control.service;
+2 
+3 import nure.atrk.climate_control.entity.Measurement;
+4 import nure.atrk.climate_control.repository.MeasurementRepository;
+5 import nure.atrk.climate_control.statistics.DescriptiveStatistics;
+6 import org.springframework.beans.factory.annotation.Autowired;
+7 import org.springframework.stereotype.Service;
+8 
+9 
+10 import java.sql.Date;
+11 import java.sql.Time;
+12 import java.sql.Timestamp;
+13 import java.text.SimpleDateFormat;
+14 import java.util.*;
+15 import java.util.stream.Collectors;
+16 
+17 @Service
+18 public class AnalyticsService {
+19 
+20     @Autowired
+21     private MeasurementRepository measurementRepository;
+22 
+23     public Map<String, Double> getSummaryStatistics(int systemId, Date startDate, Date endDate) {
+24         List<Measurement> measurements = measurementRepository.findAllBySystemIdAndDateBetween(systemId, startDate, endDate);
+25         if (measurements.isEmpty()) {
+26             return Collections.emptyMap();
+27         }
+28 
+29         DescriptiveStatistics stats = new DescriptiveStatistics();
+30         for (Measurement measurement : measurements) {
+31             stats.addValue(measurement.getValue());
+32         }
+33 
+34         Map<String, Double> summaryStats = new HashMap<>();
+35         summaryStats.put("mean", stats.getMean());
+36         summaryStats.put("median", stats.getMedian());
+37         summaryStats.put("standard_deviation", stats.getStandardDeviation());
+38         summaryStats.put("min", stats.getMin());
+39         summaryStats.put("max", stats.getMax());
+40 
+41         return summaryStats;
+42     }
+43 
+44     private double calculateThreshold(List<Measurement> measurements) {
+45         DescriptiveStatistics stats = new DescriptiveStatistics();
+46         for (Measurement measurement : measurements) {
+47             stats.addValue(measurement.getValue());
+48         }
+49 
+50         return stats.getPercentile(95);
+51     }
+52 
+53     public Map<String, Object> getPeakLoads(int systemId, Date startDate, Date endDate) {
+54         List<Measurement> measurements = measurementRepository.findAllBySystemIdAndDateBetween(systemId, startDate, endDate);
+55         if(measurements.isEmpty()) {
+56             return Collections.emptyMap();
+57         }
+58 
+59         double threshold = calculateThreshold(measurements);
+60 
+61         List<Measurement> peakLoads = measurements.stream()
+62                 .filter(m -> m.getValue() >= threshold)
+63                 .collect(Collectors.toList());
+64 
+65         Map<String, Object> result = new HashMap<>();
+66         result.put("start_date", peakLoads.getFirst().getCreatedAt());
+67         result.put("end_date", peakLoads.getLast().getCreatedAt());
+68         result.put("threshold", threshold);
+69         result.put("peakLoads", peakLoads);
+70 
+71         return result;
+72     }
+73 
+74     // 4. Method for trend analysis (simple linear regression)
+75     public Map<String, Double> getTrend(int systemId, Date startDate, Date endDate) {
+76         List<Measurement> measurements = measurementRepository.findAllBySystemIdAndDateBetween(systemId, startDate, endDate);
+77 
+78         if (measurements.isEmpty()) {
+79             throw new IllegalArgumentException("No measurements found for the given date range.");
+80         }
+81 
+82         // Adjust start and end dates to match the first and last measurements
+83         Timestamp adjustedStartDate = measurements.get(0).getCreatedAt();
+84         Timestamp adjustedEndDate = measurements.get(measurements.size() - 1).getCreatedAt();
+85 
+86         double[] times = new double[measurements.size()];
+87         double[] values = new double[measurements.size()];
+88 
+89         for (int i = 0; i < measurements.size(); i++) {
+90             times[i] = measurements.get(i).getCreatedAt().getTime();
+91             values[i] = measurements.get(i).getValue();
+92         }
+93 
+94         // Linear regression calculation (y = mx + b)
+95         double meanX = Arrays.stream(times).average().orElse(0);
+96         double meanY = Arrays.stream(values).average().orElse(0);
+97 
+98         double numerator = 0;
+99         double denominator = 0;
+100 
+101         for (int i = 0; i < times.length; i++) {
+102             numerator += (times[i] - meanX) * (values[i] - meanY);
+103             denominator += Math.pow(times[i] - meanX, 2);
+104         }
+105 
+106         double slope = numerator / denominator;
+107         double intercept = meanY - (slope * meanX);
+108 
+109         Map<String, Double> trend = new HashMap<>();
+110         trend.put("slope", slope);
+111         trend.put("intercept", intercept);
+112         trend.put("adjusted_start_date", (double) adjustedStartDate.getTime());
+113         trend.put("adjusted_end_date", (double) adjustedEndDate.getTime());
+114 
+115         return trend;
+116     }
+117 
+118 
+119     public Map<String, Object> forecast(int systemId, Date startDate, Date endDate, int daysAhead) {
+120         Map<String, Double> trend = getTrend(systemId, startDate, endDate);
+121         double slope = trend.get("slope");
+122         double intercept = trend.get("intercept");
+123         double adjustedStartDate = trend.get("adjusted_start_date");
+124         double adjustedEndDate = trend.get("adjusted_end_date");
+125 
+126         // Forecast future value
+127         Calendar calendar = Calendar.getInstance();
+128         calendar.setTime(new Date((long) adjustedEndDate));
+129         calendar.add(Calendar.DAY_OF_YEAR, daysAhead);
+130 
+131         double futureTime = calendar.getTimeInMillis();
+132         double forecastedValue = slope * futureTime + intercept;
+133 
+134         Map<String, Object> forecast = new HashMap<>();
+135         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+136 
+137         String forecastedDate = dateFormat.format(new Date((long) futureTime));
+138         String adjustedStartDateStr = dateFormat.format(new Date((long) adjustedStartDate));
+139         String adjustedEndDateStr = dateFormat.format(new Date((long) adjustedEndDate));
+140 
+141         forecast.put("forecasted_value", forecastedValue);
+142         forecast.put("forecasted_date", forecastedDate);
+143         forecast.put("adjusted_start_date", adjustedStartDateStr);
+144         forecast.put("adjusted_end_date", adjustedEndDateStr);
+145 
+146         return forecast;
+147     }
+148 }
+
+Адміністрування бази даних:
+
+1 package nure.atrk.climate_control.service;
+2 
+3 import org.springframework.stereotype.Service;
+4 
+5 import javax.crypto.Cipher;
+6 import javax.crypto.KeyGenerator;
+7 import javax.crypto.SecretKey;
+8 import javax.crypto.spec.SecretKeySpec;
+9 import java.io.*;
+10 import java.nio.file.Files;
+11 import java.nio.file.Paths;
+12 import java.security.SecureRandom;
+13 import java.text.SimpleDateFormat;
+14 import java.util.Date;
+15 import java.util.Scanner;
+16 
+17 @Service
+18 public class BackupService {
+19 
+20     private static final String BACKUP_DIRECTORY = "backups/";
+21 
+22     public String createBackup() throws IOException {
+23         // Generate a timestamp for the backup file name
+24         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+25         String backupFileName = BACKUP_DIRECTORY + "backup_" + timestamp + ".sql";
+26 
+27         // Create the backup directory if it doesn't exist
+28         File backupDir = new File(BACKUP_DIRECTORY);
+29         if (!backupDir.exists()) {
+30             backupDir.mkdirs();
+31         }
+32 
+33         // Form the command to execute
+34         String[] command = {
+35                 "cmd.exe", "/c", // Для Windows. Для Linux замените на "sh", "-c"
+36                 String.format(
+37                         "mysqldump -u%s -p%s %s > %s",
+38                         "root",
+39                         "admin",
+40                         "climate_db",
+41                         backupFileName
+42                 )
+43         };
+44 
+45         System.out.println("Executing command: " + String.join(" ", command));
+46 
+47         // Execute the command
+48         ProcessBuilder processBuilder = new ProcessBuilder(command);
+49         processBuilder.redirectErrorStream(true); // Перенаправляем ошибки в стандартный поток вывода
+50 
+51         Process process = processBuilder.start();
+52         try {
+53             int exitCode = process.waitFor();
+54             if (exitCode == 0) {
+55                 // Encrypt the backup file
+56                 encryptFile(backupFileName, backupFileName.replace(".sql", ".enc"));
+57                 Files.delete(Paths.get(backupFileName));
+58                 return "Backup created successfully at: " + backupFileName;
+59             } else {
+60                 throw new IOException("Error occurred while creating backup. Exit code: " + exitCode);
+61             }
+62         } catch (InterruptedException e) {
+63             Thread.currentThread().interrupt();
+64             throw new IOException("Backup process was interrupted", e);
+65         }
+66     }
+67 
+68     public String restoreBackup(String backupFileName) throws IOException {
+69         // Check if the backup file exists
+70         File backupFile = new File(BACKUP_DIRECTORY + backupFileName);
+71         if (!backupFile.exists()) {
+72             throw new IOException("Backup file not found: " + backupFileName);
+73         }
+74 
+75         // Decrypt the backup file
+76         String decryptedBackupFileName = backupFileName.replace(".enc", ".sql");
+77         decryptFile(backupFile.getAbsolutePath(), BACKUP_DIRECTORY + decryptedBackupFileName);
+78 
+79         // Form the command to execute
+80         String[] command = {
+81                 "cmd.exe", "/c",
+82                 String.format(
+83                         "mysql -u%s -p%s %s < %s",
+84                         "root",
+85                         "admin",
+86                         "climate_db",
+87                         BACKUP_DIRECTORY + decryptedBackupFileName
+88                 )
+89         };
+90 
+91         System.out.println("Executing command: " + String.join(" ", command));
+92 
+93         // Execute the command
+94         ProcessBuilder processBuilder = new ProcessBuilder(command);
+95         processBuilder.redirectErrorStream(true); // Redirect errors to the standard output
+96 
+97         Process process = processBuilder.start();
+98         try {
+99             int exitCode = process.waitFor();
+100             if (exitCode == 0) {
+101                 // Delete the decrypted backup file
+102                 Files.delete(Paths.get(BACKUP_DIRECTORY + decryptedBackupFileName));
+103                 return "Backup restored successfully from: " + backupFileName;
+104             } else {
+105                 InputStream errorStream = process.getErrorStream();
+106                 Scanner scanner = new Scanner(errorStream).useDelimiter("\\A");
+107                 String errorOutput = scanner.hasNext() ? scanner.next() : "";
+108                 throw new IOException("Error occurred while restoring backup. Exit code: " + exitCode + ". Error: " + errorOutput);
+109             }
+110         } catch (InterruptedException e) {
+111             Thread.currentThread().interrupt();
+112             throw new IOException("Restore process was interrupted", e);
+113         }
+114     }
+115 
+116     private void encryptFile(String inputFile, String outputFile) throws IOException {
+117         try {
+118             SecretKey secretKey = null;
+119             File keyFile = new File(BACKUP_DIRECTORY + "secret.key");
+120 
+121             // Check if the secret key file exists
+122             if (keyFile.exists()) {
+123                 byte[] keyBytes = Files.readAllBytes(Paths.get(BACKUP_DIRECTORY + "secret.key"));
+124                 secretKey = new SecretKeySpec(keyBytes, "AES");
+125             } else {
+126                 // Generate a new secret key
+127                 KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+128                 keyGenerator.init(256, new SecureRandom());
+129                 secretKey = keyGenerator.generateKey();
+130 
+131                 // Save the secret key to a file (for decryption later)
+132                 try (FileOutputStream keyOut = new FileOutputStream(BACKUP_DIRECTORY + "secret.key")) {
+133                     keyOut.write(secretKey.getEncoded());
+134                 }
+135             }
+136 
+137             // Initialize the cipher
+138             Cipher cipher = Cipher.getInstance("AES");
+139             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+140 
+141             // Read the input file and encrypt it
+142             try (FileInputStream fis = new FileInputStream(inputFile);
+143                  FileOutputStream fos = new FileOutputStream(outputFile)) {
+144                 byte[] buffer = new byte[1024];
+145                 int bytesRead;
+146                 while ((bytesRead = fis.read(buffer)) != -1) {
+147                     byte[] output = cipher.update(buffer, 0, bytesRead);
+148                     if (output != null) {
+149                         fos.write(output);
+150                     }
+151                 }
+152                 byte[] outputBytes = cipher.doFinal();
+153                 if (outputBytes != null) {
+154                     fos.write(outputBytes);
+155                 }
+156             }
+157         } catch (Exception e) {
+158             throw new IOException("Error occurred while encrypting the file", e);
+159         }
+160     }
+161 
+162     private void decryptFile(String inputFile, String outputFile) throws IOException {
+163         try {
+164             // Load the secret key from the file
+165             byte[] keyBytes = Files.readAllBytes(Paths.get(BACKUP_DIRECTORY + "secret.key"));
+166             SecretKey secretKey = new SecretKeySpec(keyBytes, "AES");
+167 
+168             // Initialize the cipher
+169             Cipher cipher = Cipher.getInstance("AES");
+170             cipher.init(Cipher.DECRYPT_MODE, secretKey);
+171 
+172             // Read the encrypted file and decrypt it
+173             try (FileInputStream fis = new FileInputStream(inputFile);
+174                  FileOutputStream fos = new FileOutputStream(outputFile)) {
+175                 byte[] buffer = new byte[1024];
+176                 int bytesRead;
+177                 while ((bytesRead = fis.read(buffer)) != -1) {
+178                     byte[] output = cipher.update(buffer, 0, bytesRead);
+179                     if (output != null) {
+180                         fos.write(output);
+181                     }
+182                 }
+183                 byte[] outputBytes = cipher.doFinal();
+184                 if (outputBytes != null) {
+185                     fos.write(outputBytes);
+186                 }
+187             }
+188         } catch (Exception e) {
+189             throw new IOException("Error occurred while decrypting the file", e);
+190         }
+191     }
+192 }
