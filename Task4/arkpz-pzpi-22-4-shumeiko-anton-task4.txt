@@ -1,0 +1,277 @@
+Харківський університет радіоелектроніки
+Факультет комп'ютерних наук
+Кафедра програмної інженерії
+
+
+
+
+ЗВІТ
+до лабораторної роботи №4 з дисципліни
+"Аналіз та рефакторинг коду"
+на тему: "РОЗРОБКА IoT КЛІЄНТА 
+(БІЗНЕС-ЛОГІКИ ТА ФУНКЦІЙ НАЛАШТУВАННЯ)"
+
+
+
+
+
+Виконав ст. гр. ПЗПІ-22-4
+Шумейко Антон Олександрович
+
+Перевірив
+ст. викладач кафедри ПІ
+Сокорчук Ігор Петрович
+
+
+
+
+
+
+Харків 2024
+1 МЕТА
+
+Метою лабораторної роботи є розробити програмне забезпечення для  IoT або SmartDevice пристрою, створеного на базі будь-якої поширеної на  сьогодні платформи, придатної для реалізації вбудованих систем для програмної системи для клімат-контролю з особистими профілями.
+
+2 ХІД РОБОТИ
+
+	2.1 Мікроконтролери та їх функціональні можливості
+
+	У ході виконання лабораторної роботи було розроблено декілька IoT пристрої для моніторингу показників приміщення та регулювання клімату.
+	Пристрій для моніторингу показників у приміщенні:
+ Мікроконтролер ESP32: було обрано завдяки інтегрованим можливостям роботи із WiFi та Bluetooth;
+ Датчик вологості та температури DHT22: вимірює показники у приміщенні, має вбудовану систему переведення.
+Функціональні можливості:
+ Сбір та первинна обробка даних: пристрій вимірює показники щосекунди та зберігає дані за останні 60 секунд. Щохвилини виконує фільтрацію даних завдяки медіанному фільтру, підготовлюючи дані для відправки на сервер;
+ Зв'язок із сервером: кожну хвилину пристрій відправляє дані на сервер за допомогою спеціального контролеру, використовуючи серійний номер, що пристрій зберігає. Для функціонування необхідне попереднє додавання пристрою до системи.
+Пристрій для регулювання клімату у приміщенні:
+ Мікроконтролер ESP32: було обрано завдяки інтегрованим можливостям роботи із WiFi та Bluetooth;
+ Micro Servo Motor: емулює роботу реального пристрою для контролю показників у приміщенні;
+ Tactile Switch Button: відповідає за перемикання стану пристрою(увімкнення/вимкнення).
+Функціональні можливості:
+ Переключення стану пристрою: користувач може змінювати стан пристрою (вмикати або вимикати) за допомогою кнопки. Стан зберігається у пам'яті пристрою;
+ Отримання команд із сервера: якщо пристрій увімкнений, щохвилини виконується HTTP-запит до сервера. Запит містить серійний номер пристрою, за яким відбувається пошук останньої команди в базі даних;
+ Обробка команд: при отриманні команди з сервера пристрій обробляє її значення (від 0 до 100) і використовує для управління сервоприводом, змінюючи його положення.
+
+2.2 Візуалізація логіки роботи за допомогою UML діаграм
+
+Для пристрою для регулювання клімату у приміщені було створено діаграму прецедентів(додаток А). А також для обох пристроїв було створено діаграми діяльності. Їх представлено у додатку Б.
+
+2.3 Математична обробка даних
+
+Математична обробка даних полягає у застосуванні медіанного фільтру для відсіювання хибних значень перед відправкою даних на сервер. Для цього відбувається сортування даних отриманого масиву та вибір центральних значень.
+
+2.4 Перелік використаних технологій
+
+Під час виконання лабораторної роботи було використано наступні технології:
+ Ngrok: сервіс, який забезпечує доступ до локального сервера через публічну мережу. Використовується для тестування та налагодження підключень пристрою до сервера;
+ C++: мова програмування, яка застосовується для написання коду мікроконтролера. Забезпечує ефективну роботу з апаратними компонентами та мережею;
+ Wokwi: онлайн-емулятор мікроконтролерів і периферійних пристроїв. Використовується для моделювання роботи пристрою, включаючи взаємодію з кнопкою, сервоприводом і сервером.
+
+3 ВИСНОВКИ
+
+У результаті виконання лабораторної роботи було розроблено програмну логіку для IoT пристроїв, таких як: пристрій для моніторингу показників у приміщенні та пристрій для регулювання клімату у приміщенні, відповідно до вимог. Також було створено UML діаграми прецедентів да діяльності. Фрагменти програмного коду представлені у додатку В. Робота підтверджена успішним тестуванням функціоналу пристроїв у симуляційному середовищі Wokwi.
+За результатами тестування створено відеозвіт: https://youtu.be/IJYBtbxF1_Q
+
+
+
+
+ДОДАТОК А
+UML ДІАГРАМА ПРЕЦЕДЕНТІВ
+
+ 
+Рисунок А.1 – UML діаграма прецедентів пристрою для регулювання клімату у приміщенні
+ 
+ДОДАТОК Б
+UML ДІАГРАМА ДІЯЛЬНОСТІ
+
+ 
+Рисунок Б.1 – UML діаграма діяльності пристрою для моніторингу показників у приміщенні
+
+ 
+Рисунок Б.2 – UML діаграма діяльності пристрою для регулювання клімату у приміщенні
+ 
+ДОДАТОК В
+ФРАГМЕНТИ ПРОГРАМНОГО КОДУ
+
+Пристрій для моніторингу показників у приміщенні:
+1 #include <WiFi.h>
+2 #include <HTTPClient.h>
+3 #include <algorithm>
+4 #include "DHTesp.h"
+5 using namespace std;
+6 
+7 String ssid = "Wokwi-GUEST";
+8 String password = "";
+9 DHTesp sensor;
+10 
+11 String serverURL = "http://f142-2a09-bac5-5983-2dc-00-49-e3.ngrok-free.app/measurements/add";
+12 
+13 String deviceType = "temperature";
+14 // Binding device serial number
+15 String serialNumber = "12345ABC";
+16 
+17 const int sensorPin = 15;
+18 
+19 const int dataSize = 60;
+20 float temperatures[dataSize];
+21 int currentIndex = 0;
+22 
+23 void setupWiFi() {
+24   Serial.print("Connecting to WiFi");
+25   WiFi.begin(ssid, password);
+26   while (WiFi.status() != WL_CONNECTED) {
+27     delay(1000);
+28     Serial.print(".");
+29   }
+30   Serial.println("\nConnected to WiFi!");
+31 }
+32 
+33 float calculateMedian(float arr[], int size) {
+34   float temp[size];
+35   memcpy(temp, arr, size * sizeof(float));
+36   std::sort(temp, temp + size);
+37   if (size % 2 == 0) {
+38     return (temp[size / 2 - 1] + temp[size / 2]) / 2.0;
+39   } else {
+40     return temp[size / 2];
+41   }
+42 }
+43 
+44 void sendDataToServer(float medianValue) {
+45   if (WiFi.status() == WL_CONNECTED) {
+46     HTTPClient http;
+47 
+48     // Construct the full URL
+49     String fullURL = serverURL + "?serial=" + serialNumber + "&value=" + String(medianValue, 2);
+50     Serial.println("Request URL: " + fullURL);
+51 
+52     if (http.begin(fullURL)) {
+53       int httpResponseCode = http.GET();
+54 
+55       if (httpResponseCode > 0) {
+56         Serial.print("Server response code: ");
+57         Serial.println(httpResponseCode);
+58 
+59         String response = http.getString();
+60         Serial.print("Server response body: ");
+61         Serial.println(response);
+62       } else {
+63         Serial.print("Error sending data, code: ");
+64         Serial.println(httpResponseCode);
+65         Serial.println(HTTP_CODE_OK);
+66         Serial.println(http.errorToString(httpResponseCode));
+67       }
+68 
+69       http.end();
+70     } else {
+71       Serial.println("Failed to connect to server.");
+72     }
+73   } else {
+74     Serial.println("WiFi not connected!");
+75   }
+76 }
+77 
+78 
+79 
+80 void setup() {
+81   Serial.begin(115200);
+82   setupWiFi();
+83   sensor.setup(sensorPin, DHTesp::DHT22);
+84 }
+85 
+86 void loop() {
+87   float temperature = sensor.getTempAndHumidity().temperature;
+88 
+89   temperatures[currentIndex] = temperature;
+90   currentIndex = (currentIndex + 1) % dataSize;
+91   Serial.print("\nCurrent measurement: ");
+92   Serial.println(temperature);
+93 
+94   if (currentIndex == 0) {
+95     float median = calculateMedian(temperatures, dataSize);
+96     Serial.print("Median value: ");
+97     Serial.println(median);
+98     sendDataToServer(median);
+99   }
+100 
+101   delay(1000);
+102 }
+
+
+Пристрій для регулювання клімату у приміщенні:
+1 #include <WiFi.h>
+2 #include <HTTPClient.h>
+3 #include <ESP32Servo.h>
+4 
+5 const char* ssid = "Wokwi-GUEST";
+6 const char* password = "";
+7 
+8 const char* serverUrl = "http://f142-2a09-bac5-5983-2dc-00-49-e3.ngrok-free.app/commands/last/";
+9 
+10 // Binding device serial number
+11 const String serialNumber = "TEMPO111";
+12 
+13 const unsigned long requestInterval = 60000; // 1 minute
+14 
+15 const int buttonPin = 13;
+16 const int servoPin = 15;
+17 
+18 bool deviceOn = false;
+19 unsigned long lastRequestTime = 0;
+20 Servo servo;
+21 
+22 void setup() {
+23   pinMode(buttonPin, INPUT_PULLUP);
+24   servo.attach(servoPin);
+25   servo.write(0);
+26   
+27   Serial.begin(115200);
+28   connectToWiFi();
+29 }
+30 
+31 void loop() {
+32   if (digitalRead(buttonPin) == LOW) {
+33     delay(50); // to avoid button debouncing
+34     if (digitalRead(buttonPin) == LOW) {
+35       deviceOn = !deviceOn;
+36       Serial.println(deviceOn ? "Device ON" : "Device OFF");
+37       delay(300);
+38     }
+39   }
+40 
+41   if (deviceOn && millis() - lastRequestTime > requestInterval) {
+42     sendRequestToServer();
+43     lastRequestTime = millis();
+44   }
+45 }
+46 
+47 void connectToWiFi() {
+48   Serial.print("Connecting to WiFi");
+49   WiFi.begin(ssid, password);
+50   while (WiFi.status() != WL_CONNECTED) {
+51     delay(500);
+52     Serial.print(".");
+53   }
+54   Serial.println("\nWiFi connected");
+55 }
+56 
+57 void sendRequestToServer() {
+58   if (WiFi.status() == WL_CONNECTED) {
+59     HTTPClient http;
+60     String url = String(serverUrl) + serialNumber;
+61     http.begin(url);
+62     int httpResponseCode = http.GET();
+63 
+64     if (httpResponseCode == 200) {
+65       String payload = http.getString();
+66       int commandValue = payload.toInt();
+67       Serial.println("Command received: " + String(commandValue));
+68       servo.write(map(commandValue, 0, 100, 0, 180));
+69     } else {
+70       Serial.println("Failed to get command. HTTP response code: " + String(httpResponseCode));
+71     }
+72     http.end();
+73   } else {
+74     Serial.println("WiFi not connected");
+75   }
+76 }
